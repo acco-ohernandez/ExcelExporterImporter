@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>Command ExcelExporterImporter</Text>
+    <Description>Some description for ExcelExporterImporter</Description>
+    <Assembly>ExcelExporterImporter.dll</Assembly>
+    <FullClassName>ExcelExporterImporter.Command</FullClassName>
+    <ClientId>afc1b9f6-7fcf-455b-a07a-ffee11518b71</ClientId>
+    <VendorId>com.YOUR COMPANY NAME</VendorId>
+    <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
+  </AddIn>
+  <AddIn Type="Application">
+    <Name>Application ExcelExporterImporter</Name>
+    <Assembly>ExcelExporterImporter.dll</Assembly>
+    <FullClassName>ExcelExporterImporter.App</FullClassName>
+    <ClientId>8076f10d-af53-4a70-b833-258f31a19859</ClientId>
+    <VendorId>com.YOUR COMPANY NAME</VendorId>
+    <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
+  </AddIn>
+</RevitAddIns>
