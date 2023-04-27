@@ -59,8 +59,8 @@ namespace ExcelExporterImporter
             {
                 //string uid = "dc86627d-cf12-49fe-bdad-488a619b34a1-00060aca"; // row Elem UniqueId - NO GOOD
                 string uid = "7a2419bd-e042-4b38-8b95-781bc33e7dd8-000854c1"; // schedule ID - GOOD
-                var elementsreturned = _GetViewScheduleBasedOnUniqueId(doc, uid);
-                foreach (var elem in elementsreturned)
+                var elementsReturned = _GetViewScheduleBasedOnUniqueId(doc, uid);
+                foreach (var elem in elementsReturned)
                 {
                     Debug.Print($"Elem Name: {elem.Name} " +
                                 $"UniqueId : {elem.UniqueId}");
