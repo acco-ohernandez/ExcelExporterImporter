@@ -1,21 +1,12 @@
 #region Namespaces
-using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
-using Autodesk.Revit.Creation;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-
+using System.Threading;
 #endregion
 
 namespace ExcelExporterImporter
@@ -47,29 +38,58 @@ namespace ExcelExporterImporter
 
             // ================= GetAllSchedules =================
             var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            foreach (var _curViewSchedule in _schedulesList)
+            {
+                //// Create a ViewScheduleExportOptions object
+                ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
+                exportOptions.FieldDelimiter = ",";
 
-            // Uncommen the option you want to use
-            //==== Option 1 ==== Get schedule by array possition in _schedulesList ;
-            var _selectedSchedule = _schedulesList[6];
-            //////==== Option 2 ==== Get schedule by name from _schedulesList
-            ////string _scheduleNameToSelect = "Electrical Equipment Connection Schedule";
-            ////var _selectedSchedule = _schedulesList.FirstOrDefault(x => x.Name == _scheduleNameToSelect); 
-            Debug.Print($"Working on ViewSchedule: {_selectedSchedule.Name} ID: {_selectedSchedule.Id}"); // This line is only for debug output
+                string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
+                string _name = $"{_curViewSchedule.Name}.csv";
+                _curViewSchedule.Export(_path, _name, exportOptions); // exports schedule
+                //Process.Start(Path.Combine(_path, _name)); // opens exported file
 
-            // Get the schedule rows data list
-            var _scheduleTableDataAsString = _GetScheduleTableDataAsString(_selectedSchedule, doc);
-
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop); // Get Desktop Path
-            string filePath = Path.Combine(desktopPath, $"{_selectedSchedule.Name}.txt");      // Combine DesktopPath with Schedule Name for filePath
-
-            File.WriteAllLines(filePath, _scheduleTableDataAsString);  // Write the contents of the _scheduleRowList to the file
-            Process.Start(filePath);                                   // open the outputed file
+                var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
+                string _curFilePath = $"{_path}\\{_name}";
+                AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
+            }
 
             return Result.Succeeded;
         }
 
+        //public void AddUniqueIdColumnToCsv(string filePath, string[] uniqueIds)
+        public void AddUniqueIdColumnToViewScheduleCsv(string filePath, List<string> uniqueIds)
+        {
+            // Wait for 1 second
+            Thread.Sleep(200);
 
-        
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("The specified file does not exist.", filePath);
+            }
+
+            var csvLines = File.ReadAllLines(filePath);
+            if (csvLines.Length < 3)
+            {
+                throw new InvalidOperationException("The specified file does not have enough rows.");
+            }
+
+            // Add the UniqueID header to the first row
+            csvLines[0] = csvLines[0] + ",";       // Update Row 0
+            csvLines[1] = "UniqueID," + csvLines[1];  // Update Row 1
+            csvLines[2] = csvLines[2] + ",";        // Update Row 2
+
+            // Add the UniqueID values to each subsequent row
+            for (int i = 3; i < csvLines.Length; i++)
+            {
+                csvLines[i] = uniqueIds[i - 3] + "," + csvLines[i];
+            }
+
+            // Write the modified CSV data to the same file
+            File.WriteAllLines(filePath, csvLines);
+        }
+
+
         public static String GetMethod()
         {
             var method = MethodBase.GetCurrentMethod().DeclaringType?.FullName;

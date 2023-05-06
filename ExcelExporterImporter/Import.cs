@@ -1,25 +1,11 @@
 #region Namespaces
-using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
-using Autodesk.Revit.Creation;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.ExtensibleStorage;
-using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using static System.Net.Mime.MediaTypeNames;
-
 #endregion
 
 #region Begining of doc
@@ -51,79 +37,57 @@ namespace ExcelExporterImporter
             #endregion
             #endregion
 
-            #region Testing
-            // This if statement is just to test some code without 
-            // running the entire code.
-            // Change to true or false depending if you want to execute or not.
-            if (false) // <---- Don't for get to change it if you need to.
+            // ================= Import CSVs =================
+            string[] csvFilePaths = GetCsvFilePath(); // Get CSV file paths
+            if (csvFilePaths == null)
             {
-                //string uid = "dc86627d-cf12-49fe-bdad-488a619b34a1-00060aca"; // row Elem UniqueId - NO GOOD
-                string uid = "7a2419bd-e042-4b38-8b95-781bc33e7dd8-000854c1"; // schedule ID - GOOD
-                var elementsReturned = _GetViewScheduleBasedOnUniqueId(doc, uid);
-                foreach (var elem in elementsReturned)
-                {
-                    Debug.Print($"Elem Name: {elem.Name} " +
-                                $"UniqueId : {elem.UniqueId}");
-                }
+                TaskDialog.Show("INFO", "You didn't select any CSV file");
+                return Result.Cancelled;
+            }//Tell user no file was selected and stop process
 
-                return Result.Cancelled;  
-            }
-            #endregion
+            var _curDocScheduleNames = GetAllScheduleNames(doc); // Get all the schedules names in current doc
 
-
-            // ================= GetAllSchedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
-            //Get schedule by array possition in _schedulesList;
-            var _selectedSchedule = _schedulesList[6];
-            Debug.Print($"Selected Schedule Name: {_selectedSchedule.Name}");
-            //return Result.Cancelled;
-
-            // Get list of row elements
-            List<Element> _elementsList = MyUtils.GetElementsOnScheduleRow(doc, _selectedSchedule);
-            //List<ElementId> td = _elementsList.Select(e => e.Id).ToList();
-
-            using (Transaction tx = new Transaction(doc, "Update Parameters")) // Start a new transaction to make changes to the elements in Revit
+            string csvScheduleNamesFound = null;    // Tran Found Schedules
+            string csvScheduleNamesNotFound = null; // Track Not Found Schedules
+            foreach (var csvFilePath in csvFilePaths)  // Loop Through all the selected CSVs
             {
-                tx.Start(); // Lock the doc while changes are made in the transaction
-
-                int numCount = 0; // Initialize a counter to keep track of the number of elements processed
-                var rowElemIds = _elementsList.Select(e => e.Id);  // Get the IDs of all the row elements in the selected schedule
-                foreach (var rowElemId in rowElemIds)
+                var _viewScheduleNameFromCSV = GetLineFromCSV(csvFilePath, 1)[0];  // Get View schedule name from csv
+                if (_curDocScheduleNames.Contains(_viewScheduleNameFromCSV))
                 {
-                    var rowElem = doc.GetElement(rowElemId); // Get the element from its ID
-                    Debug.Print($"{rowElem.Name} {rowElem.UniqueId}");
+                    Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
 
+                    var _headersFromCSV = GetLineFromCSV(csvFilePath, 2);                   // Get Headers from csv
+                    List<string[]> _viewScheduledata = ImportCSVToStringList(csvFilePath);  // Get data from csv - skips the first 3 lines
+                    csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
 
-                    ParameterSet paramSet = rowElem.Parameters; // Get the parameters of the element
-                    // Print the name and value of each parameter
-                    foreach (Parameter parameter in paramSet)
+                    using (Transaction tx = new Transaction(doc, $"Update {_viewScheduleNameFromCSV} Parameters")) // Start a new transaction to make changes to the elements in Revit
                     {
-                        string paramName = parameter.Definition.Name; // Get the name of the parameter
-                        string paramValue = parameter.AsValueString(); // Get the value of the parameter as a string
+                        tx.Start(); // Lock the doc while changes are made in the transaction
 
-                        Debug.Print($"Parameter_Name: {paramName} \n" +
-                                   $"Parameter_Value: {paramValue} \n" +
-                                        $"IsReadOnly: {parameter.IsReadOnly}\n" +
-                            $"====================================");
-
-                        numCount++;
-
-                        // Update all the values from the Test2 Parameter to "Romeo"
-                        //if (paramName == "Test2") // use this one if there is a parameter call Test2
-                        if (paramName != null && parameter.IsReadOnly == false) // Only attempt to make shanges if the parameter Is Not ReadyOnly
-                        {
-                            // Set the value of the parameter 
-                            parameter.Set($"{numCount} - ElemID: {parameter.Id}");
-                        }
+                        // UPDATE THE SCHEDULES FROM PRIVIOSLY EXPORTED CSV FILES.
+                        // THIS WILL ONLY UPDATE STRING-TYPE FIELDS THAT ARE NOT READONLY.
+                        var _viewScheduleUpdateResult = _UpdateViewSchedule(doc, _viewScheduleNameFromCSV, _headersFromCSV, _viewScheduledata);
+                        tx.Commit();
                     }
                 }
+                else
+                {
+                    Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Not found in current document!");
+                    csvScheduleNamesNotFound += $"{_viewScheduleNameFromCSV}\n"; // add found schedule to csvScheduleNamesNotFound for later report.
+                }
 
-                tx.Commit(); // Commit the changes made in the transaction
+            }
+            if (csvScheduleNamesFound != null)
+            {
+                TaskDialog.Show("INFO", $"Updated the following Schedule(s):\n\n{csvScheduleNamesFound}");
+            }
+            if (csvScheduleNamesNotFound != null)
+            {
+                TaskDialog.Show("INFO", $"Could Not find the following Schedule(s):\n\n{csvScheduleNamesNotFound}");
             }
 
             return Result.Succeeded;
         }
-
 
         public static String GetMethod()
         {

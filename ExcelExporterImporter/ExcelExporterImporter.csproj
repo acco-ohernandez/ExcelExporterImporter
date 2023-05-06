@@ -58,8 +58,10 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Classes\ButtonDataClass.cs" />
-    <Compile Include="Import.cs" />
     <Compile Include="Export.cs" />
+    <Compile Include="Import.cs" />
+    <Compile Include="Archived_Files\Import_OLD.cs" />
+    <Compile Include="Archived_Files\Export_Old.cs" />
     <Compile Include="Utils\MyUtils.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
