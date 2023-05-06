@@ -38,13 +38,16 @@ namespace ExcelExporterImporter
 
             // ================= GetAllSchedules =================
             var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            string _exportedSchedules = "";
             foreach (var _curViewSchedule in _schedulesList)
             {
                 //// Create a ViewScheduleExportOptions object
                 ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
                 exportOptions.FieldDelimiter = ",";
 
-                string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
+                //string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
+                string _FolderName = "Revit_Exports";
+                var _path = _CreateFolderOnDesktopByName(_FolderName);
                 string _name = $"{_curViewSchedule.Name}.csv";
                 _curViewSchedule.Export(_path, _name, exportOptions); // exports schedule
                 //Process.Start(Path.Combine(_path, _name)); // opens exported file
@@ -52,7 +55,11 @@ namespace ExcelExporterImporter
                 var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
                 string _curFilePath = $"{_path}\\{_name}";
                 AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
+
+                _exportedSchedules += $"{ _curViewSchedule.Name}\n";
             }
+            // using my _MyTaskDialog Method. Removes the prefix on the Title
+            _MyTaskDialog("Exported Schedules:", _exportedSchedules);
 
             return Result.Succeeded;
         }

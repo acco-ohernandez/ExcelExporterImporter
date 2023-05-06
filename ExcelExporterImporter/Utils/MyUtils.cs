@@ -1,113 +1,6 @@
-﻿//using Autodesk.Revit.Attributes;
-//using Autodesk.Revit.DB;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Text;
-//using System.Windows.Controls;
-//using System.Windows.Shapes;
-
-//namespace ExcelExporterImporter
-//{
-//    [Transaction(TransactionMode.Manual)]
-//    public class MyUtils
-//    {
-//        //###########################################################################################
-//        /// <summary>
-//        /// _GetScheduleTableDataAsString Method: Takes in one ViewSchedule and the Autodesk.Revit.DB.Document
-//        /// </summary>
-//        /// <param name="_selectedSchedule"></param>
-//        /// <param name="doc"></param>
-//        /// <returns>Returns a comma delimited string list of all the schedule data</returns>
-//        /// 
-//        public List<string> _GetScheduleTableDataAsString(ViewSchedule _selectedSchedule, Autodesk.Revit.DB.Document doc)
-//        {
-//            //---Gets the list of items/rows in the schedule---
-//            var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id).WhereElementIsNotElementType();
-//            List<string> uid = new List<string>(); // List to hold all the UniqueIDs in the schedule
-//            foreach (var _scheduleRow in _scheduleItemsCollector)
-//            {
-//                Debug.Print($"{_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId}"); // only for Debug
-//                uid.Add(_scheduleRow.UniqueId); // adds each UniqueID to the uid list
-//            }
-
-//            // Get the data from the ViewSchedule object
-//            TableData tableData = _selectedSchedule.GetTableData();
-//            TableSectionData _sectionData = tableData.GetSectionData(SectionType.Body);
-
-//            // Concatenate the data into a list of strings, with each string representing a row
-//            List<string> _rowsList = new List<string>();
-//            for (int row = 0; row < _sectionData.NumberOfRows; row++)
-//            {
-//                int _adjestedRow = row - 2;
-//                StringBuilder sb = new StringBuilder();
-//                if (row == 0)
-//                {
-//                    sb.Append("UniqueId,"); // adds the "UniqueId" header
-//                }
-//                if (row == 1)
-//                {
-//                    sb.Append(","); // adds the "," on the second line. This is because schedules second row is empty.
-//                }
-//                for (int col = 0; col < _sectionData.NumberOfColumns; col++)
-//                {
-//                    string cellText = _sectionData.GetCellText(row, col).ToString();
-//                    var cellTextColIndex = _sectionData.GetCellText(row, col);
-
-//                    if (col == 0 && row >= 2) // if first column, add the UniqueID
-//                    {
-//                        string uniqueId = uid[_adjestedRow];
-//                        sb.Append(uniqueId + ",");
-//                    }
-//                    else if (IsScheduleFieldEditable(_selectedSchedule, col))
-//                    {
-//                        sb.Append("{");
-//                        sb.Append(cellText);
-//                        sb.Append("}");
-//                    }
-//                    else
-//                    {
-//                        sb.Append(cellText);
-//                    }
-//                    sb.Append(",");
-//                }
-//                _rowsList.Add(sb.ToString());
-//            }
-//            // This line is only for debug, outputs all the rows in _scheduleTableDataAsString
-//            int lineN = 0; foreach (var line in _rowsList) { lineN++; Debug.Print($"Row {lineN}: {line}"); }
-
-//            return _rowsList;
-//        }
-//        //###########################################################################################
-
-
-//        public bool IsScheduleFieldEditable(ViewSchedule viewSchedule, int columnIndex)
-//        {
-//            var td = viewSchedule.GetTableData();
-
-//            var sd= td.GetSectionData(columnIndex);
-//            Debug.Print(sd.GetCellText(3,3));
-//            //// Get the column IDs
-//            //int[] columnIds = viewSchedule.GetColumnIds(SectionType.Body);
-
-//            //// Get the column data
-//            //object[] columnData = viewSchedule.GetColumnData(columnIds);
-
-//            //// Check if the column is editable
-//            //if (columnData[columnIndex] != null && columnData[columnIndex] is bool)
-//            //{
-//            //    return (bool)columnData[columnIndex];
-//            //}
-//            //else
-//            //{
-//               return false;
-//            //}
-//        }
-
-//    }
-//}
-///#########
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -272,10 +165,6 @@ namespace ExcelExporterImporter
             }
             Debug.Print($"=========== End of GetElementsOnScheduleRow Method");
 
-
-
-
-
             return elementOnRow;
         }
 
@@ -305,23 +194,62 @@ namespace ExcelExporterImporter
             }
             return uid;
         }
+
+
         //###########################################################################################
+        //public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
+        //{
+        //    var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id);
+        //    var element = _scheduleItemsCollector.FirstOrDefault(e => e.UniqueId == _uniqueId);
+
+        //    if (element != null)
+        //    {
+        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {element.GetType()} - UID: {element.UniqueId} === ELEMENT RETURNED!"); // only for Debug
+        //    }
+        //    else
+        //    {
+        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: Element not found with UniqueId {_uniqueId}");
+        //    }
+
+        //    return element;
+        //}
         public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
         {
             //---Gets the list of items/rows in the schedule---
-            var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id);//.WhereElementIsNotElementType();
-            foreach (Element _scheduleRow in _scheduleItemsCollector)
-            {
-                if (_scheduleRow.UniqueId == _uniqueId)
-                {
-                    Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === ELEMENT RETURNED!"); // only for Debug
+            var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id).Where(e => e.UniqueId == _uniqueId);
 
-                    return _scheduleRow;
-                }
-                Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === Not Returned"); // only for Debug
+            if (_scheduleItemsCollector.Any())
+            {
+                int count = _scheduleItemsCollector.Count();
+                Element _scheduleRow = _scheduleItemsCollector.FirstOrDefault() as Element;
+                Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === ELEMENT RETURNED!");
+                return _scheduleRow;
             }
-            return null;
+            else
+            {
+                Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: Element with UID {_uniqueId} not found!");
+                return null;
+            }
         }
+        //public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
+        //{
+        //    //---Gets the list of items/rows in the schedule---
+        //    var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id);//.WhereElementIsNotElementType();
+        //    foreach (Element _scheduleRow in _scheduleItemsCollector)
+        //    {
+        //        if (_scheduleRow.UniqueId == _uniqueId)
+        //        {
+        //            Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === ELEMENT RETURNED!"); // only for Debug
+
+        //            return _scheduleRow;
+        //        }
+        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === Not Returned"); // only for Debug
+        //    }
+        //    return null;
+        //}
+
+
+
         //###########################################################################################
         public static string[] GetCsvFilePath()
         {
@@ -453,6 +381,7 @@ namespace ExcelExporterImporter
             if (_viewScheduleToUpdate != null)
             {
                 _updatesResult += $"\n=== Updating ViewSchedule:{_viewScheduleToUpdate.Name} ===\n";
+
                 List<Element> _rowsElementsOnViewSchedule =
                 _GetElementsOnScheduleRow(doc, _viewScheduleToUpdate); // Get the list of Elements on Rows of the _viewScheduleToUpdate
 
@@ -460,12 +389,16 @@ namespace ExcelExporterImporter
                 {
                     string _curCsvRowUniqueId = _viewScheduledataRow[0];  // Get the Unique Id from the current Row
 
+
+
+
+
                     Element _curRowElement =
                         _getElementOnViewScheduleRowByUniqueId(doc, _viewScheduleToUpdate, _curCsvRowUniqueId); // Get Element on ViewSchedule Row by UniqueId
+
                     // if the Element from the _curCsvRowUniqueId does not exist in the current schedule, skip it.
                     if (_curRowElement != null)
                     {
-
                         ParameterSet paramSet = _curRowElement.Parameters; // Get the parameters of the current row element in the _viewScheduleToUpdate
 
                         int headerCount = headersFromCSV.Count();
@@ -484,6 +417,7 @@ namespace ExcelExporterImporter
 
                                 if (paramName == _curCsvHeaderName && parameter != null && parameter.StorageType == StorageType.String && !parameter.IsReadOnly)
                                 {
+
                                     string _valueFromCsv = _viewScheduledataRow[_headerColumnNumber];
                                     parameter.Set(_valueFromCsv);
                                     //// Check if the CSV value is not empty before updating the parameter
@@ -509,6 +443,32 @@ namespace ExcelExporterImporter
             }
 
             return _updatesResult;
+        }
+        //###########################################################################################
+
+        public static void _MyTaskDialog(string Title, string MainContent)
+        {
+            TaskDialog _taskScheduleResult = new TaskDialog(Title); 
+            _taskScheduleResult.TitleAutoPrefix = false;
+            _taskScheduleResult.MainContent = MainContent;
+            _taskScheduleResult.Show();
+        }
+        //###########################################################################################
+
+        public static string _CreateFolderOnDesktopByName(string name)
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string folderPath = System.IO.Path.Combine(desktopPath, name);
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+                Debug.Print("Directory created successfully.");
+            }
+            else
+            {
+                Debug.Print("Directory already exists.");
+            }
+            return folderPath;
         }
 
     }
