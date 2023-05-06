@@ -36,6 +36,10 @@ namespace ExcelExporterImporter
             // get form data and do something
             #endregion
 
+            //string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
+            string _FolderName = "Revit_Exports";
+            var _path = _CreateFolderOnDesktopByName(_FolderName);
+
             // ================= GetAllSchedules =================
             var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
             string _exportedSchedules = "";
@@ -44,10 +48,7 @@ namespace ExcelExporterImporter
                 //// Create a ViewScheduleExportOptions object
                 ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
                 exportOptions.FieldDelimiter = ",";
-
-                //string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
-                string _FolderName = "Revit_Exports";
-                var _path = _CreateFolderOnDesktopByName(_FolderName);
+                                
                 string _name = $"{_curViewSchedule.Name}.csv";
                 _curViewSchedule.Export(_path, _name, exportOptions); // exports schedule
                 //Process.Start(Path.Combine(_path, _name)); // opens exported file
@@ -60,6 +61,9 @@ namespace ExcelExporterImporter
             }
             // using my _MyTaskDialog Method. Removes the prefix on the Title
             _MyTaskDialog("Exported Schedules:", _exportedSchedules);
+
+            // Open Windows Explorer to the folder path
+            System.Diagnostics.Process.Start("explorer.exe", _path);
 
             return Result.Succeeded;
         }
@@ -78,7 +82,7 @@ namespace ExcelExporterImporter
             var csvLines = File.ReadAllLines(filePath);
             if (csvLines.Length < 3)
             {
-                throw new InvalidOperationException("The specified file does not have enough rows.");
+                throw new InvalidOperationException("The specified file does not have the correct format of rows.");
             }
 
             // Add the UniqueID header to the first row
