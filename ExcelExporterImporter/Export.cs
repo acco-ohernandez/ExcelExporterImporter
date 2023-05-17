@@ -1,12 +1,13 @@
 #region Namespaces
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 #endregion
 
 namespace ExcelExporterImporter
@@ -48,16 +49,17 @@ namespace ExcelExporterImporter
                 //// Create a ViewScheduleExportOptions object
                 ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
                 exportOptions.FieldDelimiter = ",";
-                                
+                //exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+
                 string _name = $"{_curViewSchedule.Name}.csv";
                 _curViewSchedule.Export(_path, _name, exportOptions); // exports schedule
                 //Process.Start(Path.Combine(_path, _name)); // opens exported file
 
-                var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
-                string _curFilePath = $"{_path}\\{_name}";
-                AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
+                //var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
+                //string _curFilePath = $"{_path}\\{_name}";
+                //AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
 
-                _exportedSchedules += $"{ _curViewSchedule.Name}\n";
+                //_exportedSchedules += $"{_curViewSchedule.Name}\n";
             }
             // using my _MyTaskDialog Method. Removes the prefix on the Title
             _MyTaskDialog("Exported Schedules:", _exportedSchedules);

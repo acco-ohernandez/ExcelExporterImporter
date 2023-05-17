@@ -1,17 +1,22 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
+
+using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.ExtensibleStorage;
+using Autodesk.Revit.UI;
+
+using Microsoft.Win32;
 
 namespace ExcelExporterImporter
 {
@@ -448,7 +453,7 @@ namespace ExcelExporterImporter
 
         public static void _MyTaskDialog(string Title, string MainContent)
         {
-            TaskDialog _taskScheduleResult = new TaskDialog(Title); 
+            TaskDialog _taskScheduleResult = new TaskDialog(Title);
             _taskScheduleResult.TitleAutoPrefix = false;
             _taskScheduleResult.MainContent = MainContent;
             _taskScheduleResult.Show();
@@ -469,6 +474,428 @@ namespace ExcelExporterImporter
                 Debug.Print("Directory already exists.");
             }
             return folderPath;
+        }
+
+        //###########################################################################################
+        //add shared parameter to schedule
+        public static void _AddSharedParameterToSchedule(Document doc, string _viewScheduleName)
+        {
+            var viewSchedule = _GetViewScheduleByName(doc, _viewScheduleName);
+            var field = viewSchedule.Definition.GetSchedulableFields().FirstOrDefault(x => IsSharedParameterSchedulableField(viewSchedule.Document, x.ParameterId, new Guid("<your guid>")));
+            //.FirstOrDefault(x => x.ParameterId == destParameterId);
+
+
+        }
+        public static bool IsSharedParameterSchedulableField(Document document, ElementId parameterId, Guid sharedParameterId)
+        {
+            var sharedParameterElement = document.GetElement(parameterId) as SharedParameterElement;
+
+            return sharedParameterElement?.GuidValue == sharedParameterId;
+        }
+
+        public static ScheduleField M_AddByNameAvailableFieldToSchedule(Document doc, string scheduleName, string fieldName)
+        {
+            // Get the schedule by name.
+            ViewSchedule schedule = _GetViewScheduleByName(doc, scheduleName);
+
+            // Get the definition of the schedule.
+            ScheduleDefinition definition = schedule.Definition;
+
+            // Get the list of available fields.
+            IList<SchedulableField> availableFields = definition.GetSchedulableFields();
+
+            // Find the field you want to add.
+            SchedulableField field = availableFields.FirstOrDefault(f => f.GetName(doc) == fieldName);
+
+            // Add the field to the schedule.
+            var fieldAdded = definition.AddField(field);
+
+            return fieldAdded;
+        }
+        //###########################################################################################
+        public static void _UpdateMyUniqueIDColumn(Document doc, string _viewScheduleName)
+        {
+            //using (Transaction tx = new Transaction(doc, $"Update Parameters")) // Start a new transaction to make changes to the elements in Revit
+            //{
+            //    tx.Start(); // Lock the doc while changes are made in the transaction
+
+
+            ViewSchedule _viewScheduleToUpdate = _GetViewScheduleByName(doc, _viewScheduleName); // Get the schedule by name
+            List<Element> _rowsElementsOnViewSchedule = _GetElementsOnScheduleRow(doc, _viewScheduleToUpdate); // Get the list of Elements on Rows of the _viewScheduleToUpdate
+            foreach (Element _rowElement in _rowsElementsOnViewSchedule)
+            {
+                // Get the parameter set for the current row element.
+                ParameterSet paramSet = _rowElement.Parameters; // Get the parameters of the current row element in the _viewScheduleToUpdate
+
+                // paramSet.
+                //paramSet.Where(p => p.Definition.Name == "MyUniqueId");
+
+
+                // Iterate through the parameters in the parameter set.
+                foreach (Parameter param in paramSet)
+                {
+                    // Check if the parameter's name is equal to MyUniqueId.
+                    //if (param.Definition.Name == "MyUniqueId")
+                    if (param.Definition.Name == "Dev_Text_1")
+                    {
+                        // Get the parameter's value.
+                        param.Set($"{_rowElement.UniqueId}");
+                    }
+                }
+
+            }
+
+            //    tx.Commit();
+            //}
+
+
+            TaskDialog.Show("Info", "Added UniqueIDs to MyUniqueId Column");
+        }
+        //###########################################################################################
+        private void ShowDefinitionFileInfo(DefinitionFile myDefinitionFile)
+        {
+            StringBuilder fileInformation = new StringBuilder(500);
+
+            // get the file name 
+            fileInformation.AppendLine("File Name: " + myDefinitionFile.Filename);
+
+            // iterate the Definition groups of this file
+            foreach (DefinitionGroup myGroup in myDefinitionFile.Groups)
+            {
+                // get the group name
+                fileInformation.AppendLine("Group Name: " + myGroup.Name);
+
+                // iterate the difinitions
+                foreach (Definition definition in myGroup.Definitions)
+                {
+                    // get definition name
+                    fileInformation.AppendLine("Definition Name: " + definition.Name);
+                }
+            }
+            TaskDialog.Show("Revit", fileInformation.ToString());
+        }
+        //###########################################################################################
+
+        public void AddNewParameterToSchedule(Document doc, string _viewScheduleName, string parameterName)
+        {
+            // Get the schedule by name.
+            ViewSchedule schedule = _GetViewScheduleByName(doc, _viewScheduleName); // Get the schedule by name
+
+            // Get the definition of the schedule.
+            ScheduleDefinition definition = schedule.Definition;
+
+            // Create a new parameter.
+
+
+
+            // Update the schedule.
+            // schedule.Update();
+        }
+        public static void M_GetSharedParameterFile(Autodesk.Revit.ApplicationServices.Application app)
+        {
+            var originalSharedParametersFilename = app.SharedParametersFilename;
+            // Create a new Revit application object.
+            //Application app = new Application();
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+
+            // Open the shared parameters file.
+            DefinitionFile definitionFile = app.OpenSharedParameterFile();
+
+            // Get the DefinitionGroups collection for the DefinitionFile object.
+            DefinitionGroups groups = definitionFile.Groups;
+
+            // Iterate through the DefinitionGroups collection to get the DefinitionGroup objects.
+            foreach (DefinitionGroup group in groups)
+            {
+                // Iterate through the DefinitionGroup objects to get the Definition objects.
+                foreach (Definition definition in group.Definitions)
+                {
+                    // Use the Definition objects to access the shared parameters.
+                    Console.WriteLine(definition.Name);
+                }
+            }
+
+            // Close the shared parameters file.
+            definitionFile.Dispose(); //Close();
+
+            // Dispose the Revit application object.
+            app.Dispose();
+
+            app.SharedParametersFilename = originalSharedParametersFilename;
+        }
+
+        public static Definition GetParameterDefinitionFromFile(DefinitionFile defFile, string groupName, string paramName)
+        {
+            // iterate the Definition groups of this file
+            foreach (DefinitionGroup group in defFile.Groups)
+            {
+                if (group.Name == groupName)
+                {
+                    // iterate the difinitions
+                    foreach (Definition definition in group.Definitions)
+                    {
+                        if (definition.Name == paramName)
+                            return definition;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static string M_MyAddNewParameterToSchedule(Autodesk.Revit.ApplicationServices.Application app)
+        {
+            string originalSharedParametersFile = app.SharedParametersFilename;
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            // Open the shared parameters file.
+            DefinitionFile definitionFile = app.OpenSharedParameterFile();
+            Definition paramDef = null;
+            // iterate the Definition groups of this file
+            foreach (DefinitionGroup group in definitionFile.Groups)
+            {
+                if (group.Name == "Dev_Group_Common")
+                {
+                    // iterate the difinitions
+                    foreach (Definition definition in group.Definitions)
+                    {
+                        if (definition.Name == "Dev_Text_1")
+                            paramDef = definition;
+                    }
+                }
+            }
+
+            return originalSharedParametersFile;
+        }
+
+        public static void addSharedParamToSchedule(Document doc, Autodesk.Revit.ApplicationServices.Application app, string scheduleName)
+        {
+            var originalSharedParametersFilename = app.SharedParametersFilename;
+            // Create a new Revit application object.
+            //Application app = new Application();
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+
+            // Open the shared parameters file.
+            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
+
+            DefinitionGroup definitionGroup = sharedParameterFile.Groups.get_Item("Dev_Group_Common");
+            Definition definition = definitionGroup.Definitions.get_Item("Dev_Text_1");
+            GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
+
+            ViewSchedule scheduleView = _GetViewScheduleByName(doc, scheduleName);
+
+            // Get the schedule definition from the view
+            ScheduleDefinition scheduleDef = scheduleView.Definition;
+
+            // Create the schedule field using the shared parameter
+            //ScheduleField scheduleField = scheduleDef.AddField(definition);
+
+            // Modify any additional properties of the schedule field if needed
+            // scheduleField.ColumnHeading = "Dev Text 1";
+
+            // Refresh the schedule to reflect the changes
+            scheduleView.Document.Regenerate();
+
+            //// Save the document if necessary
+            //scheduleView.Document.Save();
+
+
+
+            /////////////////////////
+            ////(Document doc, string scheduleName, string fieldName)
+
+            //ViewSchedule schedule = _GetViewScheduleByName(doc, scheduleName);
+
+            //// Get the definition of the schedule.
+            //ScheduleDefinition definition = schedule.Definition;
+
+            //var t = definition.par
+
+            //// Get the list of available fields.
+            //IList<SchedulableField> availableFields = definition.GetSchedulableFields();
+
+            //// Find the field you want to add.
+            //SchedulableField field = availableFields.FirstOrDefault(f => f.GetName(doc) == "Dev_Text_1");//fieldName);
+
+            //// Add the field to the schedule.
+            //var fieldAdded = definition.AddField(field);
+
+            //app.SharedParametersFilename = originalSharedParametersFilename;
+            ////return fieldAdded;
+
+
+        }
+
+
+        public static void M_Add_Dev_Text_1(Autodesk.Revit.ApplicationServices.Application app, Document doc, string _curScheduleName, BuiltInCategory _builtInCat)
+        {
+
+            //using (Transaction tx = new Transaction(doc, $"AddParam")) // Start a new transaction to make changes to the elements in Revit
+            //{
+            //    tx.Start();
+            //    tx.Commit();
+            //}
+
+            //string _curScheduleName = "Mechanical Equipment Schedule";
+
+            var sv = _GetViewScheduleByName(doc, _curScheduleName);
+            var i = sv.Category;
+
+            //define category for shared param
+            //Category myCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_MechanicalEquipment);
+            Category myCat = doc.Settings.Categories.get_Item(_builtInCat);
+            CategorySet myCatSet = doc.Application.Create.NewCategorySet();
+            myCatSet.Insert(myCat);
+
+            app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
+            var originalSharedParametersFilename = app.SharedParametersFilename;
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+
+            // Open the shared parameters file.
+            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
+            var curDef = MyUtils.GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
+            //create binding
+            ElementBinding curBinding = doc.Application.Create.NewInstanceBinding(myCatSet);
+
+            using (Transaction tx = new Transaction(doc, $"AddParam")) // Start a new transaction to make changes to the elements in Revit
+            {
+                tx.Start();
+                //insert definition into binding
+                //using (Transaction curTrans = new Transaction(doc, "Added Shared Parameter"))
+                //{
+                //    if (curTrans.Start() == TransactionStatus.Started)
+                //    {
+                //        //do something
+                var paramAdded = doc.ParameterBindings.Insert(curDef, curBinding, BuiltInParameterGroup.PG_IDENTITY_DATA);
+                //    }
+
+                //    //commit changes
+                //    //curTrans.RollBack();
+                //    curTrans.Commit();
+                //}
+
+                var af = M_AddByNameAvailableFieldToSchedule(doc, _curScheduleName, "Dev_Text_1");
+                _UpdateMyUniqueIDColumn(doc, _curScheduleName);
+                tx.Commit();
+                //tx.RollBack();
+            }
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            app.SharedParametersFilename = originalSharedParametersFilename;
+            //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+
+
+
+
+            //using (Transaction t = new Transaction(doc, "Added param to sched"))
+            //{
+            //    t.Start();
+            //    var af = M_AddByNameAvailableFieldToSchedule(doc, "Mechanical Equipment Schedule", "Count");
+            //    t.Commit();
+            //}
+        }
+
+        public static BuiltInCategory _GetScheduleBuiltInCategory(ViewSchedule schedule)
+        {
+            Category scheduleCategory = schedule.Category;
+            BuiltInCategory builtInCategory = (BuiltInCategory)scheduleCategory.Id.IntegerValue;
+
+            if (Enum.IsDefined(typeof(BuiltInCategory), builtInCategory))
+            {
+                return builtInCategory;
+            }
+            else
+            {
+                // Return a default value or throw an exception, based on your requirements
+                return BuiltInCategory.INVALID;
+            }
+        }
+
+
+        public static BuiltInCategory _GetElementBuiltInCategory(Element element)
+        {
+            Document doc = element.Document;
+            Category category = doc.GetElement(element.GetTypeId()).Category;
+            BuiltInCategory builtInCategory = (BuiltInCategory)category.Id.IntegerValue;
+
+            if (Enum.IsDefined(typeof(BuiltInCategory), builtInCategory))
+            {
+                return builtInCategory;
+            }
+            else
+            {
+                // Return a default value or throw an exception, based on your requirements
+                return BuiltInCategory.INVALID;
+            }
+        }
+
+        public static Category _GetScheduleCategory(Document doc, ViewSchedule schedule)
+        {
+            var CatID = schedule.Definition.CategoryId;
+            Category _scheduleCategory = null;
+            foreach (Category c in doc.Settings.Categories)
+            {
+                if (c.Id == CatID)
+                {
+                    Debug.Print($"CategoryName:{c.Name} ID:{c.Id} CategoryType:{c.CategoryType} ");
+                    _scheduleCategory = c;
+                    return _scheduleCategory;
+                }
+            }
+            return null;
+        }
+
+
+        public List<BuiltInCategory> _GetAllBuiltInCategories()
+        {
+            List<BuiltInCategory> builtInCategories = new List<BuiltInCategory>();
+
+            foreach (BuiltInCategory category in Enum.GetValues(typeof(BuiltInCategory)))
+            {
+                if (category != BuiltInCategory.INVALID)
+                {
+                    builtInCategories.Add(category);
+                }
+            }
+
+            return builtInCategories;
+        }
+
+
+        public BuiltInCategory _GetBuiltInCategoryFromCategory(Category category)
+        {
+            if (category != null && category.Id != null && category.Id.IntegerValue >= 0)
+            {
+                BuiltInCategory builtInCategory = (BuiltInCategory)category.Id.IntegerValue;
+                if (Enum.IsDefined(typeof(BuiltInCategory), builtInCategory))
+                {
+                    return builtInCategory;
+                }
+            }
+
+            // Return a default value or throw an exception, based on your requirements
+            return BuiltInCategory.INVALID;
+        }
+
+        public static BuiltInCategory _GetBuiltInCategoryById(int categoryId)
+        {
+            BuiltInCategory builtInCategory = (BuiltInCategory)categoryId;
+
+            if (Enum.IsDefined(typeof(BuiltInCategory), builtInCategory))
+            {
+                return builtInCategory;
+            }
+            else
+            {
+                // Return a default value or throw an exception, based on your requirements
+                return BuiltInCategory.INVALID;
+            }
         }
 
     }

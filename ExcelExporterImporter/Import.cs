@@ -1,11 +1,19 @@
 #region Namespaces
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Windows.Input;
+using System.Windows.Shapes;
+
+using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
 #endregion
 
 #region Begining of doc
@@ -36,6 +44,44 @@ namespace ExcelExporterImporter
             // get form data and do something
             #endregion
             #endregion
+
+            //Testing
+            if (true)
+            {
+
+                var allBiltInCats = _GetAllBuiltInCategories();
+
+
+
+                var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
+                var _vsCategory = _GetScheduleCategory(doc, schedule);
+                var cId = schedule.Definition.CategoryId;
+
+                BuiltInCategory biCat = new BuiltInCategory();
+                foreach (Category c in doc.Settings.Categories)
+                {
+                    var curC = _GetBuiltInCategoryFromCategory(c);
+                    //if (c.Id.IntegerValue == cId.IntegerValue)
+                    if (c.Id == cId)
+                    {
+                        biCat = _GetBuiltInCategoryById(c.Id.IntegerValue);
+                    }
+                }
+
+                //M_Add_Dev_Text_1(app, doc, "Mechanical Equipment Schedule", biCat);
+                M_Add_Dev_Text_1(app, doc, schedule.Name, biCat);
+
+
+                //var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
+                //var fistElemCategory = _GetElementsOnScheduleRow(doc, schedule).FirstOrDefault();
+
+                //BuiltInCategory elementBuiltInCategory = _GetElementBuiltInCategory(fistElemCategory);
+                //BuiltInCategory cat = _GetScheduleBuiltInCategory(schedule);
+
+
+                //M_Add_Dev_Text_1(app, doc, "Mechanical Equipment Schedule", elementBuiltInCategory);
+                return Result.Succeeded;
+            }
 
             // ================= Import CSVs =================
             string[] csvFilePaths = GetCsvFilePath(); // Get CSV file paths
@@ -86,8 +132,10 @@ namespace ExcelExporterImporter
                 TaskDialog.Show("INFO", $"Could Not find the following Schedule(s):\n\n{csvScheduleNamesNotFound}");
             }
 
-            return Result.Succeeded;
+            return Result.Failed;
         }
+
+
 
         public static String GetMethod()
         {
