@@ -19,7 +19,7 @@ using Autodesk.Revit.UI;
 
 using Microsoft.Win32;
 
-namespace ExcelExporterImporter
+namespace ORH_ExcelExporterImporter
 {
     [Transaction(TransactionMode.Manual)]
     public class MyUtils
@@ -1011,8 +1011,8 @@ namespace ExcelExporterImporter
         public static void MoveCsvLastColumnToFirst(string filePath)
         {
             // Read all lines from the CSV file
-            //string[] lines = File.ReadAllLines(filePath);
-            string[] lines = File.ReadAllLines(@"C:\Users\ohernandez\Desktop\Revit_Exports\Mechanical Equipment Schedule.csv");
+            string[] lines = File.ReadAllLines(filePath);
+            //string[] lines = File.ReadAllLines(@"C:\Users\ohernandez\Desktop\Revit_Exports\Mechanical Equipment Schedule.csv");
 
             // Get the header line
             string headerLine = lines[0];

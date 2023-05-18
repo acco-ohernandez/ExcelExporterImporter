@@ -17,7 +17,7 @@ using Autodesk.Revit.UI;
 #endregion
 
 #region Begining of doc
-namespace ExcelExporterImporter
+namespace ORH_ExcelExporterImporter
 {
     [Transaction(TransactionMode.Manual)]
     public class Import : MyUtils, IExternalCommand
@@ -125,7 +125,7 @@ namespace ExcelExporterImporter
                 TaskDialog.Show("INFO", $"Could Not find the following Schedule(s):\n\n{csvScheduleNamesNotFound}");
             }
 
-            return Result.Failed;
+            return Result.Succeeded;
         }
 
 

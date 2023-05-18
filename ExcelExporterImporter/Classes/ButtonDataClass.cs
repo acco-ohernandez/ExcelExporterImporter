@@ -9,7 +9,7 @@ using System.Windows.Media.Imaging;
 
 using Autodesk.Revit.UI;
 
-namespace ExcelExporterImporter
+namespace ORH_ExcelExporterImporter
 {
     internal class ButtonDataClass
     {
@@ -26,7 +26,7 @@ namespace ExcelExporterImporter
             Data.Image = BitmapToImageSource(smallImage);
 
             // set command availability
-            Data.AvailabilityClassName = "ExcelExporterImporter.CommandAvailability";
+            Data.AvailabilityClassName = "ORH_ExcelExporterImporter.CommandAvailability";
         }
         private Assembly GetAssembly()
         {

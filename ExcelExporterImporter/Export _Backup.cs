@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Threading;
 
 using Autodesk.Revit.Attributes;
-using Autodesk.Revit.Creation;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 #endregion
@@ -15,7 +14,7 @@ using Autodesk.Revit.UI;
 namespace ORH_ExcelExporterImporter
 {
     [Transaction(TransactionMode.Manual)]
-    public class Export : MyUtils, IExternalCommand
+    public class Export_backups : MyUtils, IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -43,25 +42,16 @@ namespace ORH_ExcelExporterImporter
             string _FolderName = "Revit_Exports";
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
-            // ================= Get All Schedules =================
+            // ================= GetAllSchedules =================
             //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
-
-            // ================= Get Specific Schedule =================
             var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
 
-
-            // ================= ExportSelectedSchedules =================
             string _exportedSchedules = "";
             using (Transaction t = new Transaction(doc, "Added param to sched"))
             {
-                //t.Start();
+                t.Start();
                 foreach (var _curViewSchedule in _schedulesList)
                 {
-                    t.Start();
                     BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, _curViewSchedule);
                     M_Add_Dev_Text_2(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
@@ -87,12 +77,11 @@ namespace ORH_ExcelExporterImporter
                     _exportedSchedules += $"{_curViewSchedule.Name}\n";
 
                     MoveCsvLastColumnToFirst($"{_path}\\{_fileName}");
-                    t.RollBack();
                 }
                 // using my _MyTaskDialog Method. Removes the prefix on the Title
                 M_MyTaskDialog("Exported Schedules:", _exportedSchedules);
 
-                //t.Commit();
+                t.Commit();
             }
             // Open Windows Explorer to the folder path
             System.Diagnostics.Process.Start("explorer.exe", _path);

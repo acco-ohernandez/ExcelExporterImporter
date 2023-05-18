@@ -12,7 +12,7 @@ using Autodesk.Revit.UI;
 
 #endregion
 
-namespace ExcelExporterImporter
+namespace ORH_ExcelExporterImporter
 {
     internal class App : IExternalApplication
     {
