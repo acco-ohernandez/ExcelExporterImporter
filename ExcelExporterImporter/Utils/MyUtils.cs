@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
@@ -451,7 +452,7 @@ namespace ExcelExporterImporter
         }
         //###########################################################################################
 
-        public static void _MyTaskDialog(string Title, string MainContent)
+        public static void M_MyTaskDialog(string Title, string MainContent)
         {
             TaskDialog _taskScheduleResult = new TaskDialog(Title);
             _taskScheduleResult.TitleAutoPrefix = false;
@@ -493,7 +494,31 @@ namespace ExcelExporterImporter
             return sharedParameterElement?.GuidValue == sharedParameterId;
         }
 
-        public static ScheduleField M_AddByNameAvailableFieldToSchedule(Document doc, string scheduleName, string fieldName)
+
+        public static ScheduleField GetScheduleFieldByName(Document doc, ViewSchedule viewSchedule, string fieldName)
+        {
+            ScheduleDefinition definition = viewSchedule.Definition;
+            var scheduleFieldIds = definition.GetFieldOrder();
+
+            // Loop through the schedule fields and find the one with matching name
+            foreach (ScheduleFieldId fieldId in scheduleFieldIds)
+            {
+                ScheduleField field = definition.GetField(fieldId); ;
+                var ParamId = field.ParameterId;
+                if (ParamId.ToString() == fieldName)
+                {
+                    return field as ScheduleField;
+                }
+            }
+
+            // If no matching field is found, return null
+            return null;
+        }
+
+
+
+        //public static ScheduleField M_AddByNameAvailableFieldToSchedule(Document doc, string scheduleName, string fieldName)
+        public static void M_AddByNameAvailableFieldToSchedule(Document doc, string scheduleName, string fieldName)
         {
             // Get the schedule by name.
             ViewSchedule schedule = _GetViewScheduleByName(doc, scheduleName);
@@ -508,9 +533,21 @@ namespace ExcelExporterImporter
             SchedulableField field = availableFields.FirstOrDefault(f => f.GetName(doc) == fieldName);
 
             // Add the field to the schedule.
-            var fieldAdded = definition.AddField(field);
+            ScheduleField fieldAdded = null;
+            try
+            {
+                fieldAdded = definition.AddField(field);
+            }
+            catch
+            {
+                Debug.Print("====    Did not add the dev_Text_1 field because it already existed.    ====");
 
-            return fieldAdded;
+                //var fields =  GetScheduleFieldByName(doc, schedule, "dev_Text_1");
+                // fieldAdded = definition.GetField(fields.FieldId);
+            }
+
+
+            //return fieldAdded;
         }
         //###########################################################################################
         public static void _UpdateMyUniqueIDColumn(Document doc, string _viewScheduleName)
@@ -549,7 +586,8 @@ namespace ExcelExporterImporter
             //}
 
 
-            TaskDialog.Show("Info", "Added UniqueIDs to MyUniqueId Column");
+            //TaskDialog.Show("Info", "Added UniqueIDs to MyUniqueId Column");
+            Debug.Print("Added UniqueIDs to MyUniqueId Column");
         }
         //###########################################################################################
         private void ShowDefinitionFileInfo(DefinitionFile myDefinitionFile)
@@ -576,7 +614,7 @@ namespace ExcelExporterImporter
         }
         //###########################################################################################
 
-        public void AddNewParameterToSchedule(Document doc, string _viewScheduleName, string parameterName)
+        public static void AddNewParameterToSchedule(Document doc, string _viewScheduleName, string parameterName)
         {
             // Get the schedule by name.
             ViewSchedule schedule = _GetViewScheduleByName(doc, _viewScheduleName); // Get the schedule by name
@@ -598,7 +636,8 @@ namespace ExcelExporterImporter
             //Application app = new Application();
 
             // Set the SharedParametersFilename property to the path of the shared parameters file.
-            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
 
             // Open the shared parameters file.
             DefinitionFile definitionFile = app.OpenSharedParameterFile();
@@ -649,7 +688,9 @@ namespace ExcelExporterImporter
             string originalSharedParametersFile = app.SharedParametersFilename;
 
             // Set the SharedParametersFilename property to the path of the shared parameters file.
-            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
+
             // Open the shared parameters file.
             DefinitionFile definitionFile = app.OpenSharedParameterFile();
             Definition paramDef = null;
@@ -677,7 +718,8 @@ namespace ExcelExporterImporter
             //Application app = new Application();
 
             // Set the SharedParametersFilename property to the path of the shared parameters file.
-            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
 
             // Open the shared parameters file.
             DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
@@ -733,15 +775,6 @@ namespace ExcelExporterImporter
 
         public static void M_Add_Dev_Text_1(Autodesk.Revit.ApplicationServices.Application app, Document doc, string _curScheduleName, BuiltInCategory _builtInCat)
         {
-
-            //using (Transaction tx = new Transaction(doc, $"AddParam")) // Start a new transaction to make changes to the elements in Revit
-            //{
-            //    tx.Start();
-            //    tx.Commit();
-            //}
-
-            //string _curScheduleName = "Mechanical Equipment Schedule";
-
             var sv = _GetViewScheduleByName(doc, _curScheduleName);
             var i = sv.Category;
 
@@ -752,9 +785,11 @@ namespace ExcelExporterImporter
             myCatSet.Insert(myCat);
 
             app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
+
             var originalSharedParametersFilename = app.SharedParametersFilename;
             // Set the SharedParametersFilename property to the path of the shared parameters file.
-            app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
 
             // Open the shared parameters file.
             DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
@@ -779,7 +814,8 @@ namespace ExcelExporterImporter
                 //    curTrans.Commit();
                 //}
 
-                var af = M_AddByNameAvailableFieldToSchedule(doc, _curScheduleName, "Dev_Text_1");
+                //var af = 
+                M_AddByNameAvailableFieldToSchedule(doc, _curScheduleName, "Dev_Text_1");
                 _UpdateMyUniqueIDColumn(doc, _curScheduleName);
                 tx.Commit();
                 //tx.RollBack();
@@ -790,17 +826,39 @@ namespace ExcelExporterImporter
             //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
             //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
 
-
-
-
-            //using (Transaction t = new Transaction(doc, "Added param to sched"))
-            //{
-            //    t.Start();
-            //    var af = M_AddByNameAvailableFieldToSchedule(doc, "Mechanical Equipment Schedule", "Count");
-            //    t.Commit();
-            //}
         }
 
+        public static void M_Add_Dev_Text_2(Autodesk.Revit.ApplicationServices.Application app, Document doc, ViewSchedule _curSchedule, BuiltInCategory _builtInCat)
+        {
+            //define category for shared param
+            //Category myCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_MechanicalEquipment);
+            Category myCat = doc.Settings.Categories.get_Item(_builtInCat);
+            CategorySet myCatSet = doc.Application.Create.NewCategorySet();
+            myCatSet.Insert(myCat);
+
+            //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
+            var originalSharedParametersFilename = app.SharedParametersFilename;
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
+
+            // Open the shared parameters file.
+            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
+            var curDef = MyUtils.GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
+            //create binding
+            ElementBinding curBinding = doc.Application.Create.NewInstanceBinding(myCatSet);
+
+            var paramAdded = doc.ParameterBindings.Insert(curDef, curBinding, BuiltInParameterGroup.PG_IDENTITY_DATA);
+
+            //var af =
+            M_AddByNameAvailableFieldToSchedule(doc, _curSchedule.Name, "Dev_Text_1");
+            _UpdateMyUniqueIDColumn(doc, _curSchedule.Name);
+
+            app.SharedParametersFilename = originalSharedParametersFilename;
+
+            _curSchedule.Document.Regenerate();
+        }
         public static BuiltInCategory _GetScheduleBuiltInCategory(ViewSchedule schedule)
         {
             Category scheduleCategory = schedule.Category;
@@ -868,7 +926,7 @@ namespace ExcelExporterImporter
         }
 
 
-        public BuiltInCategory _GetBuiltInCategoryFromCategory(Category category)
+        public static BuiltInCategory _GetBuiltInCategoryFromCategory(Category category)
         {
             if (category != null && category.Id != null && category.Id.IntegerValue >= 0)
             {
@@ -897,6 +955,133 @@ namespace ExcelExporterImporter
                 return BuiltInCategory.INVALID;
             }
         }
+
+        //public void AddUniqueIdColumnToCsv(string filePath, string[] uniqueIds)
+        public static void AddUniqueIdColumnToViewScheduleCsv(string filePath, List<string> uniqueIds)
+        {
+            // Wait for 1 second
+            Thread.Sleep(200);
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("The specified file does not exist.", filePath);
+            }
+
+            var csvLines = File.ReadAllLines(filePath);
+            if (csvLines.Length < 3)
+            {
+                throw new InvalidOperationException("The specified file does not have the correct format of rows.");
+            }
+
+            // Add the UniqueID header to the first row
+            csvLines[0] = csvLines[0] + ",";       // Update Row 0
+            csvLines[1] = "UniqueID," + csvLines[1];  // Update Row 1
+            csvLines[2] = csvLines[2] + ",";        // Update Row 2
+
+            // Add the UniqueID values to each subsequent row
+            for (int i = 3; i < csvLines.Length; i++)
+            {
+                csvLines[i] = uniqueIds[i - 3] + "," + csvLines[i];
+            }
+
+            // Write the modified CSV data to the same file
+            File.WriteAllLines(filePath, csvLines);
+        }
+
+        //###########################################################################################
+        public static BuiltInCategory M_GetScheduleBuiltInCategory(Document doc, ViewSchedule schedule)
+        {
+            ElementId _scheduleDefinitionCategoryId = schedule.Definition.CategoryId;
+
+            BuiltInCategory _scheduleBuiltInCategory = new BuiltInCategory();
+            foreach (Category _settingsCategory in doc.Settings.Categories)
+            {
+                var curC = _GetBuiltInCategoryFromCategory(_settingsCategory);
+                //if (c.Id.IntegerValue == cId.IntegerValue)
+                if (_settingsCategory.Id == _scheduleDefinitionCategoryId)
+                {
+                    _scheduleBuiltInCategory = _GetBuiltInCategoryById(_settingsCategory.Id.IntegerValue);
+                    break;
+                }
+            }
+
+            return _scheduleBuiltInCategory;
+        }
+        //###########################################################################################
+        public static void MoveCsvLastColumnToFirst(string filePath)
+        {
+            // Read all lines from the CSV file
+            //string[] lines = File.ReadAllLines(filePath);
+            string[] lines = File.ReadAllLines(@"C:\Users\ohernandez\Desktop\Revit_Exports\Mechanical Equipment Schedule.csv");
+
+            // Get the header line
+            string headerLine = lines[0];
+
+            // Get the data lines excluding the header line
+            string[] dataLines = lines.Skip(1).ToArray();
+
+            // Split the header line and data lines by comma
+            string[] headerColumns = headerLine.Split(',');
+            string[][] dataColumns = dataLines.Select(line => line.Split(',')).ToArray();
+
+            // Move the last column to column A
+            for (int i = 0; i < dataColumns.Length; i++)
+            {
+                string lastColumn = dataColumns[i][dataColumns[i].Length - 1];
+
+                for (int j = dataColumns[i].Length - 1; j > 0; j--)
+                {
+                    dataColumns[i][j] = dataColumns[i][j - 1];
+                }
+
+                dataColumns[i][0] = lastColumn;
+            }
+
+            // Merge the updated header and data columns
+            string[] updatedLines = new string[dataColumns.Length + 1];
+            updatedLines[0] = string.Join(",", headerColumns);
+
+            for (int i = 0; i < dataColumns.Length; i++)
+            {
+                updatedLines[i + 1] = string.Join(",", dataColumns[i]);
+            }
+
+            // Write the updated lines back to the file
+            File.WriteAllLines(filePath, updatedLines);
+
+        }
+
+        public static string M_CreateSharedParametersFile()
+        {
+            string data = @"# This is a Revit shared parameter file.
+# Do not edit manually.
+*META	VERSION	MINVERSION
+META	2	1
+*GROUP	ID	NAME
+GROUP	1	Dev_Group_Common
+*PARAM	GUID	NAME	DATATYPE	DATACATEGORY	GROUP	VISIBLE	DESCRIPTION	USERMODIFIABLE	HIDEWHENNOVALUE
+PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
+
+            //33
+            string outputFileName = @"ACCO -- Dev_Revit Shared Parameters.txt";
+            string tempDirectory = System.IO.Path.GetTempPath();
+            string tempFilePath = System.IO.Path.Combine(tempDirectory, outputFileName);
+
+            try
+            {
+                // Write the data to the temp file
+                System.IO.File.WriteAllText(tempFilePath, data);
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that occur during file writing
+                Console.WriteLine("An error occurred while writing the temp file: " + ex.Message);
+                return null;
+            }
+
+            return tempFilePath;
+        }
+
 
     }
 }

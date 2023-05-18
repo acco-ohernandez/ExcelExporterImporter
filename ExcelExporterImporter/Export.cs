@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -42,65 +43,53 @@ namespace ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= GetAllSchedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
+
             string _exportedSchedules = "";
-            foreach (var _curViewSchedule in _schedulesList)
+            using (Transaction t = new Transaction(doc, "Added param to sched"))
             {
-                //// Create a ViewScheduleExportOptions object
-                ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
-                exportOptions.FieldDelimiter = ",";
-                //exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+                t.Start();
+                foreach (var _curViewSchedule in _schedulesList)
+                {
+                    BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, _curViewSchedule);
+                    M_Add_Dev_Text_2(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
-                string _name = $"{_curViewSchedule.Name}.csv";
-                _curViewSchedule.Export(_path, _name, exportOptions); // exports schedule
-                //Process.Start(Path.Combine(_path, _name)); // opens exported file
+                    //// Create a ViewScheduleExportOptions object
+                    ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
+                    exportOptions.FieldDelimiter = ",";
+                    //exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+                    exportOptions.TextQualifier = ExportTextQualifier.DoubleQuote;
+                    exportOptions.ColumnHeaders = ExportColumnHeaders.MultipleRows;
+                    exportOptions.HeadersFootersBlanks = true;
 
-                //var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
-                //string _curFilePath = $"{_path}\\{_name}";
-                //AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
 
-                //_exportedSchedules += $"{_curViewSchedule.Name}\n";
+                    string _fileName = $"{_curViewSchedule.Name}.csv";
+                    _curViewSchedule.Export(_path, _fileName, exportOptions); // exports schedule
+                    Thread.Sleep(500);
+
+                    //Process.Start(Path.Combine(_path, _name)); // opens exported file
+
+                    //var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
+                    //string _curFilePath = $"{_path}\\{_name}";
+                    //AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
+                    //######
+                    _exportedSchedules += $"{_curViewSchedule.Name}\n";
+
+                    MoveCsvLastColumnToFirst($"{_path}\\{_fileName}");
+                }
+                // using my _MyTaskDialog Method. Removes the prefix on the Title
+                M_MyTaskDialog("Exported Schedules:", _exportedSchedules);
+
+                t.Commit();
             }
-            // using my _MyTaskDialog Method. Removes the prefix on the Title
-            _MyTaskDialog("Exported Schedules:", _exportedSchedules);
-
             // Open Windows Explorer to the folder path
             System.Diagnostics.Process.Start("explorer.exe", _path);
 
             return Result.Succeeded;
         }
 
-        //public void AddUniqueIdColumnToCsv(string filePath, string[] uniqueIds)
-        public void AddUniqueIdColumnToViewScheduleCsv(string filePath, List<string> uniqueIds)
-        {
-            // Wait for 1 second
-            Thread.Sleep(200);
 
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("The specified file does not exist.", filePath);
-            }
-
-            var csvLines = File.ReadAllLines(filePath);
-            if (csvLines.Length < 3)
-            {
-                throw new InvalidOperationException("The specified file does not have the correct format of rows.");
-            }
-
-            // Add the UniqueID header to the first row
-            csvLines[0] = csvLines[0] + ",";       // Update Row 0
-            csvLines[1] = "UniqueID," + csvLines[1];  // Update Row 1
-            csvLines[2] = csvLines[2] + ",";        // Update Row 2
-
-            // Add the UniqueID values to each subsequent row
-            for (int i = 3; i < csvLines.Length; i++)
-            {
-                csvLines[i] = uniqueIds[i - 3] + "," + csvLines[i];
-            }
-
-            // Write the modified CSV data to the same file
-            File.WriteAllLines(filePath, csvLines);
-        }
 
 
         public static String GetMethod()

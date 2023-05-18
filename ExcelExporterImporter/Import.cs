@@ -46,30 +46,23 @@ namespace ExcelExporterImporter
             #endregion
 
             //Testing
-            if (true)
+            if (false)
             {
+                //using (Transaction t = new Transaction(doc, "Added param to sched"))
+                //{
+                //    t.Start();
+                //    var af = M_AddByNameAvailableFieldToSchedule(doc, "Mechanical Equipment Schedule", "Count");
+                //    t.Commit();
+                //}
 
-                var allBiltInCats = _GetAllBuiltInCategories();
-
-
+                //var allBiltInCats = _GetAllBuiltInCategories();
 
                 var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
-                var _vsCategory = _GetScheduleCategory(doc, schedule);
-                var cId = schedule.Definition.CategoryId;
 
-                BuiltInCategory biCat = new BuiltInCategory();
-                foreach (Category c in doc.Settings.Categories)
-                {
-                    var curC = _GetBuiltInCategoryFromCategory(c);
-                    //if (c.Id.IntegerValue == cId.IntegerValue)
-                    if (c.Id == cId)
-                    {
-                        biCat = _GetBuiltInCategoryById(c.Id.IntegerValue);
-                    }
-                }
+                BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, schedule);
 
                 //M_Add_Dev_Text_1(app, doc, "Mechanical Equipment Schedule", biCat);
-                M_Add_Dev_Text_1(app, doc, schedule.Name, biCat);
+                M_Add_Dev_Text_1(app, doc, schedule.Name, _scheduleBuiltInCategory);
 
 
                 //var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
