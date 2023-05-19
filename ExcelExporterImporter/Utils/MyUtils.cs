@@ -830,6 +830,34 @@ namespace ORH_ExcelExporterImporter
 
         }
 
+        public static void M_Add_Dev_Text_3(Autodesk.Revit.ApplicationServices.Application app, Document doc, ViewSchedule _curSchedule, CategorySet myCatSet)
+        {
+            //define category for shared param
+
+
+            //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
+            var originalSharedParametersFilename = app.SharedParametersFilename;
+
+            // Set the SharedParametersFilename property to the path of the shared parameters file.
+            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
+            app.SharedParametersFilename = M_CreateSharedParametersFile();
+
+            // Open the shared parameters file.
+            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
+            var curDef = MyUtils.GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
+            //create binding
+            ElementBinding curBinding = doc.Application.Create.NewInstanceBinding(myCatSet);
+
+            var paramAdded = doc.ParameterBindings.Insert(curDef, curBinding, BuiltInParameterGroup.PG_IDENTITY_DATA);
+
+            //var af =
+            M_AddByNameAvailableFieldToSchedule(doc, _curSchedule.Name, "Dev_Text_1");
+            _UpdateMyUniqueIDColumn(doc, _curSchedule.Name);
+
+            app.SharedParametersFilename = originalSharedParametersFilename;
+
+            _curSchedule.Document.Regenerate();
+        }
         public static void M_Add_Dev_Text_2(Autodesk.Revit.ApplicationServices.Application app, Document doc, ViewSchedule _curSchedule, BuiltInCategory _builtInCat)
         {
             //define category for shared param
@@ -991,6 +1019,19 @@ namespace ORH_ExcelExporterImporter
         }
 
         //###########################################################################################
+        public static CategorySet M_GetAllBuiltInCategory(Document doc, ViewSchedule schedule)
+        {
+            CategorySet newCatSet = new CategorySet();
+            foreach (Category _settingsCategory in doc.Settings.Categories)
+            {
+                if (_settingsCategory.AllowsBoundParameters)
+                {
+                    newCatSet.Insert(_settingsCategory);
+                }
+            }
+
+            return newCatSet;
+        }
         public static BuiltInCategory M_GetScheduleBuiltInCategory(Document doc, ViewSchedule schedule)
         {
             ElementId _scheduleDefinitionCategoryId = schedule.Definition.CategoryId;
