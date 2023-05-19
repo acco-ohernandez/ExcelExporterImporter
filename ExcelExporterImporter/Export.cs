@@ -1,6 +1,7 @@
 #region Namespaces
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -53,27 +54,13 @@ namespace ORH_ExcelExporterImporter
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
 
-
             // ================= ExportSelectedSchedules =================
             string _exportedSchedules = "";
 
-            if (false) // for testing only
+            if (false) // set TRUE only for testing a piece of code without running the entire class
             {
-                using (Transaction t = new Transaction(doc, "Added param to sched"))
-                {
-                    //t.Start();
-                    foreach (var _curViewSchedule in _schedulesList)
-                    {
-                        t.Start();
+                //Place the code you wanto test here 
 
-                        ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(_curViewSchedule);
-
-
-                        t.RollBack();
-                    }
-
-                    //t.Commit();
-                }
                 return Result.Succeeded;
             }
 
