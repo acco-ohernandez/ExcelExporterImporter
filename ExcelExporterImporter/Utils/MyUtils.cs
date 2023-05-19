@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Lifetime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1008,7 +1010,7 @@ namespace ORH_ExcelExporterImporter
             return _scheduleBuiltInCategory;
         }
         //###########################################################################################
-        public static void MoveCsvLastColumnToFirst(string filePath)
+        public static void M_MoveCsvLastColumnToFirst(string filePath)
         {
             // Read all lines from the CSV file
             string[] lines = File.ReadAllLines(filePath);
@@ -1050,6 +1052,81 @@ namespace ORH_ExcelExporterImporter
             File.WriteAllLines(filePath, updatedLines);
 
         }
+        //###########################################################################################
+        /// <summary>
+        /// This updated version takes into account quoted text fields by parsing each line character by character and keeping track of whether the current character is within quotes or not. It correctly handles commas within quoted text fields and ensures that the fields are split and joined correctly when moving the last column to the first position.
+
+        ///Please note that this approach assumes that quoted text fields do not contain any escaped quotes.If your CSV file contains escaped quotes (e.g., "This is a ""quoted"" field"), additional handling may be required.
+        /// </summary>
+        /// <param name="csvFilePath"></param>
+        public static void M_MoveCsvLastColumnToFirst2(string csvFilePath)
+        {
+            // Read all lines from the CSV file
+            string[] lines = System.IO.File.ReadAllLines(csvFilePath);
+
+            if (lines.Length > 0)
+            {
+                // Split the first line to get the column headers
+                string[] headers = lines[0].Split(',');
+
+                // Find the index of the last column
+                int lastColumnIndex = headers.Length - 1;
+
+                // Move the last column to the first position
+                string lastColumnHeader = headers[lastColumnIndex];
+                for (int i = lastColumnIndex; i > 0; i--)
+                {
+                    headers[i] = headers[i - 1];
+                }
+                headers[0] = lastColumnHeader;
+
+                // Modify each line by moving the last column to the first position
+                for (int i = 1; i < lines.Length; i++) // Start from index 1 to skip the header row
+                {
+                    List<string> values = new List<string>();
+                    StringBuilder fieldValue = new StringBuilder();
+                    bool withinQuotes = false;
+
+                    foreach (char c in lines[i])
+                    {
+                        if (c == '"' && !withinQuotes)
+                        {
+                            withinQuotes = true;
+                            fieldValue.Append(c);
+                        }
+                        else if (c == '"' && withinQuotes)
+                        {
+                            withinQuotes = false;
+                            fieldValue.Append(c);
+                        }
+                        else if (c == ',' && !withinQuotes)
+                        {
+                            values.Add(fieldValue.ToString());
+                            fieldValue.Clear();
+                        }
+                        else
+                        {
+                            fieldValue.Append(c);
+                        }
+                    }
+
+                    values.Add(fieldValue.ToString());
+
+                    string lastValue = values[lastColumnIndex];
+                    for (int j = lastColumnIndex; j > 0; j--)
+                    {
+                        values[j] = values[j - 1];
+                    }
+                    values[0] = lastValue;
+
+                    lines[i] = string.Join(",", values);
+                }
+
+                // Write the modified lines back to the CSV file
+                System.IO.File.WriteAllLines(csvFilePath, lines);
+            }
+        }
+        //##############################################################
 
         public static string M_CreateSharedParametersFile()
         {

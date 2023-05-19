@@ -86,7 +86,8 @@ namespace ORH_ExcelExporterImporter
                     //######
                     _exportedSchedules += $"{_curViewSchedule.Name}\n";
 
-                    MoveCsvLastColumnToFirst($"{_path}\\{_fileName}");
+                    M_MoveCsvLastColumnToFirst($"{_path}\\{_fileName}");
+                    //M_MoveCsvLastColumnToFirst2($"{_path}\\{_fileName}");
                     t.RollBack();
                 }
                 // using my _MyTaskDialog Method. Removes the prefix on the Title
