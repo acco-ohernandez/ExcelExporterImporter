@@ -44,10 +44,10 @@ namespace ORH_ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= Get All Schedules =================
-            //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
 
             // ================= Get Specific Schedule =================
-            var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
+            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
@@ -56,12 +56,37 @@ namespace ORH_ExcelExporterImporter
 
             // ================= ExportSelectedSchedules =================
             string _exportedSchedules = "";
+
+            if (false) // for testing only
+            {
+                using (Transaction t = new Transaction(doc, "Added param to sched"))
+                {
+                    //t.Start();
+                    foreach (var _curViewSchedule in _schedulesList)
+                    {
+                        t.Start();
+
+                        ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(_curViewSchedule);
+
+
+                        t.RollBack();
+                    }
+
+                    //t.Commit();
+                }
+                return Result.Succeeded;
+            }
+
             using (Transaction t = new Transaction(doc, "Added param to sched"))
             {
                 //t.Start();
                 foreach (var _curViewSchedule in _schedulesList)
                 {
                     t.Start();
+
+                    // set the schedule to show tile and headers returns de original schedule definition
+                    ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(_curViewSchedule);
+
                     BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, _curViewSchedule);
                     M_Add_Dev_Text_2(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 

@@ -77,7 +77,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ExcelExporterImporter.addin" />
+    <Content Include="ORH_ExcelExporterImporter.addin" />
     <EmbeddedResource Include="Resources\Yellow_32.png" />
     <EmbeddedResource Include="Resources\Yellow_16.png" />
     <EmbeddedResource Include="Resources\Red_32.png" />

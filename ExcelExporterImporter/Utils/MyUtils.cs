@@ -1159,6 +1159,19 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             return tempFilePath;
         }
 
+        public static ScheduleDefinition M_ShowHeadersAndTileOnSchedule(ViewSchedule curViewSchedule)
+        {
+            // get the current definitions of the schedule
+            ScheduleDefinition curScheduleDefinition = curViewSchedule.Definition;
 
+            // set the ShowTitle to True
+            curScheduleDefinition.ShowTitle = true;
+
+            // set the ShowHeaders to True
+            curScheduleDefinition.ShowHeaders = true;
+
+            // Return the original definitions
+            return curScheduleDefinition;
+        }
     }
 }
