@@ -1019,7 +1019,7 @@ namespace ORH_ExcelExporterImporter
         }
 
         //###########################################################################################
-        public static CategorySet M_GetAllBuiltInCategory(Document doc, ViewSchedule schedule)
+        public static CategorySet M_GetAllowBoundParamCategorySet(Document doc, ViewSchedule schedule)
         {
             CategorySet newCatSet = new CategorySet();
             foreach (Category _settingsCategory in doc.Settings.Categories)

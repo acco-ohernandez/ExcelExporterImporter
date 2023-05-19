@@ -45,11 +45,11 @@ namespace ORH_ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= Get All Schedules =================
-            //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
 
             // ================= Get Specific Schedule =================
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
-            var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
+            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
@@ -74,9 +74,12 @@ namespace ORH_ExcelExporterImporter
                     // set the schedule to show tile and headers returns de original schedule definition
                     ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(_curViewSchedule);
 
+                    // Get the BuiltInCategory of the current schedule
                     //BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, _curViewSchedule);
                     //M_Add_Dev_Text_2(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
-                    CategorySet _scheduleBuiltInCategory = M_GetAllBuiltInCategory(doc, _curViewSchedule);
+
+                    // Get all the categegories that allow AllowsBoundParameters as a set 
+                    CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, _curViewSchedule);
                     M_Add_Dev_Text_3(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
                     //// Create a ViewScheduleExportOptions object
