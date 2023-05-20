@@ -82,13 +82,21 @@ namespace ORH_ExcelExporterImporter
                     CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, _curViewSchedule);
                     M_Add_Dev_Text_3(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
-                    //// Create a ViewScheduleExportOptions object
+                    // Create a new instance of ViewScheduleExportOptions
                     ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
+
+                    // Set the field delimiter to ","
                     exportOptions.FieldDelimiter = ",";
-                    //exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+
+                    // Set the text qualifier to double quotes
                     exportOptions.TextQualifier = ExportTextQualifier.DoubleQuote;
-                    exportOptions.ColumnHeaders = ExportColumnHeaders.MultipleRows;
-                    exportOptions.HeadersFootersBlanks = true;
+
+                    // Set the column headers to export only one row
+                    exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+
+                    // Exclude group headers, footers, and blank lines from the export
+                    exportOptions.HeadersFootersBlanks = false;
+                    //#####
 
 
                     string _fileName = $"{_curViewSchedule.Name}.csv";

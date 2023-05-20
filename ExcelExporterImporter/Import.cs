@@ -96,7 +96,7 @@ namespace ORH_ExcelExporterImporter
                     Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
 
                     var _headersFromCSV = GetLineFromCSV(csvFilePath, 2);                   // Get Headers from csv
-                    List<string[]> _viewScheduledata = ImportCSVToStringList(csvFilePath);  // Get data from csv - skips the first 3 lines
+                    List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 3 lines
                     csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
 
                     using (Transaction tx = new Transaction(doc, $"Update {_viewScheduleNameFromCSV} Parameters")) // Start a new transaction to make changes to the elements in Revit

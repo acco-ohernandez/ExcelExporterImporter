@@ -314,7 +314,37 @@ namespace ORH_ExcelExporterImporter
 
             return dataList;
         }
+        public static List<string[]> ImportCSVToStringList2(string csvFilePath)
+        {
+            var dataList = new List<string[]>();
 
+            using (StreamReader reader = new StreamReader(csvFilePath))
+            {
+                // Skip the first three lines (header and empty lines)
+                reader.ReadLine();
+                reader.ReadLine();
+                //reader.ReadLine();
+
+                // Use a regular expression to split the line into fields only on commas that are not inside quotes
+                Regex csvParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    string[] fields = csvParser.Split(line);
+
+                    // Remove quotes from each field
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        fields[i] = fields[i].Trim('"');
+                    }
+
+                    dataList.Add(fields);
+                }
+            }
+
+            return dataList;
+        }
         //public static List<string[]> ImportCSVToStringList(string csvFilePath)
         //{
         //    var dataList = new List<string[]>();

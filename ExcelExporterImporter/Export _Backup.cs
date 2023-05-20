@@ -57,11 +57,12 @@ namespace ORH_ExcelExporterImporter
 
                     //// Create a ViewScheduleExportOptions object
                     ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
+                    exportOptions.Title = true;
                     exportOptions.FieldDelimiter = ",";
                     //exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
                     exportOptions.TextQualifier = ExportTextQualifier.DoubleQuote;
-                    exportOptions.ColumnHeaders = ExportColumnHeaders.MultipleRows;
-                    exportOptions.HeadersFootersBlanks = true;
+                    exportOptions.ColumnHeaders = ExportColumnHeaders.OneRow;
+                    exportOptions.HeadersFootersBlanks = false;
 
 
                     string _fileName = $"{_curViewSchedule.Name}.csv";
