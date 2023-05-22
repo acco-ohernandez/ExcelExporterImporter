@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace ExcelExporterImporter
+using Autodesk.Revit.UI;
+
+namespace ORH_ExcelExporterImporter
 {
     internal class ButtonDataClass
     {
@@ -25,7 +26,7 @@ namespace ExcelExporterImporter
             Data.Image = BitmapToImageSource(smallImage);
 
             // set command availability
-            Data.AvailabilityClassName = "ExcelExporterImporter.CommandAvailability";
+            Data.AvailabilityClassName = "ORH_ExcelExporterImporter.CommandAvailability";
         }
         private Assembly GetAssembly()
         {

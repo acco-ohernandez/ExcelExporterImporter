@@ -3,16 +3,16 @@
   <AddIn Type="Command">
     <Text>Command ExcelExporterImporter</Text>
     <Description>Some description for ExcelExporterImporter</Description>
-    <Assembly>ExcelExporterImporter.dll</Assembly>
-    <FullClassName>ExcelExporterImporter.Command</FullClassName>
+    <Assembly>ORH_ExcelExporterImporter.dll</Assembly>
+    <FullClassName>ORH_ExcelExporterImporter.Command</FullClassName>
     <ClientId>afc1b9f6-7fcf-455b-a07a-ffee11518b71</ClientId>
     <VendorId>com.YOUR COMPANY NAME</VendorId>
     <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
   </AddIn>
   <AddIn Type="Application">
     <Name>Application ExcelExporterImporter</Name>
-    <Assembly>ExcelExporterImporter.dll</Assembly>
-    <FullClassName>ExcelExporterImporter.App</FullClassName>
+    <Assembly>ORH_ExcelExporterImporter.dll</Assembly>
+    <FullClassName>ORH_ExcelExporterImporter.App</FullClassName>
     <ClientId>8076f10d-af53-4a70-b833-258f31a19859</ClientId>
     <VendorId>com.YOUR COMPANY NAME</VendorId>
     <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
