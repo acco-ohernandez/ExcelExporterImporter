@@ -96,12 +96,11 @@ namespace ORH_ExcelExporterImporter
 
                     // Exclude group headers, footers, and blank lines from the export
                     exportOptions.HeadersFootersBlanks = false;
-                    //#####
-
+                    //
 
                     string _fileName = $"{_curViewSchedule.Name}.csv";
                     _curViewSchedule.Export(_path, _fileName, exportOptions); // exports schedule
-                    Thread.Sleep(500);
+                    Thread.Sleep(400);
 
                     //Process.Start(Path.Combine(_path, _name)); // opens exported file
 
