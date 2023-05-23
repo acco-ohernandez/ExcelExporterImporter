@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -57,7 +58,7 @@ namespace ORH_ExcelExporterImporter
 
                 //var allBiltInCats = _GetAllBuiltInCategories();
 
-                var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
+                var schedule = M_GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
 
                 BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, schedule);
 
@@ -65,7 +66,7 @@ namespace ORH_ExcelExporterImporter
                 M_Add_Dev_Text_1(app, doc, schedule.Name, _scheduleBuiltInCategory);
 
 
-                //var schedule = _GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
+                //var schedule = M_GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
                 //var fistElemCategory = _GetElementsOnScheduleRow(doc, schedule).FirstOrDefault();
 
                 //BuiltInCategory elementBuiltInCategory = _GetElementBuiltInCategory(fistElemCategory);
@@ -84,20 +85,31 @@ namespace ORH_ExcelExporterImporter
                 return Result.Cancelled;
             }//Tell user no file was selected and stop process
 
-            var _curDocScheduleNames = GetAllScheduleNames(doc); // Get all the schedules names in current doc
+            //var _curDocScheduleNames = GetAllScheduleNames(doc); // Get all the schedules names in current doc
+            var _curDocSchedulesUniqueIds = GetAllScheduleUniqueIds(doc); // Get all the schedules names in current doc
 
-            string csvScheduleNamesFound = null;    // Tran Found Schedules
+            string csvScheduleNamesFound = null;    // Track Found Schedules
             string csvScheduleNamesNotFound = null; // Track Not Found Schedules
+
             foreach (var csvFilePath in csvFilePaths)  // Loop Through all the selected CSVs
             {
-                var _viewScheduleNameFromCSV = GetLineFromCSV(csvFilePath, 1)[0];  // Get View schedule name from csv
-                if (_curDocScheduleNames.Contains(_viewScheduleNameFromCSV))
+                CheckAndPromptToCloseExcel(csvFilePath); // Tell the user to close excel before continueing
+
+                string _viewScheduleUniqueIdFromCSV = null;
+                try { _viewScheduleUniqueIdFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[0]; }  // Get View schedule name from csv
+                catch (Exception) { continue; }
+
+                var _viewScheduleNameFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[1];  // Get View schedule UniqueId from csv
+
+                // Check if the current Schedule UniqueID from the CSV is found in _curDocSchedulesUniqueIds
+                if (_curDocSchedulesUniqueIds.Contains(_viewScheduleUniqueIdFromCSV))
                 {
                     Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
 
-                    var _headersFromCSV = GetLineFromCSV(csvFilePath, 2);                   // Get Headers from csv
+                    var _headersFromCSV = M_GetLinesFromCSV(csvFilePath, 2);                   // Get Headers from csv
                     List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 3 lines
                     csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
+
 
                     using (Transaction tx = new Transaction(doc, $"Update {_viewScheduleNameFromCSV} Parameters")) // Start a new transaction to make changes to the elements in Revit
                     {
@@ -105,7 +117,7 @@ namespace ORH_ExcelExporterImporter
 
                         // UPDATE THE SCHEDULES FROM PRIVIOSLY EXPORTED CSV FILES.
                         // THIS WILL ONLY UPDATE STRING-TYPE FIELDS THAT ARE NOT READONLY.
-                        var _viewScheduleUpdateResult = _UpdateViewSchedule(doc, _viewScheduleNameFromCSV, _headersFromCSV, _viewScheduledata);
+                        var _viewScheduleUpdateResult = _UpdateViewSchedule(doc, _viewScheduleUniqueIdFromCSV, _headersFromCSV, _viewScheduledata);
                         tx.Commit();
                     }
                 }
