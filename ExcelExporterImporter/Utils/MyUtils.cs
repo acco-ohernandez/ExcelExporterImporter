@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Lifetime;
@@ -22,8 +23,6 @@ using Autodesk.Revit.UI;
 using Microsoft.Win32;
 
 using OfficeOpenXml;
-
-
 
 namespace ORH_ExcelExporterImporter
 {
@@ -363,6 +362,45 @@ namespace ORH_ExcelExporterImporter
 
             return dataList;
         }
+
+
+
+        public static List<string[]> ImportCSVToStringList2_NoGood1(string csvFilePath)
+        {
+            var dataList = new List<string[]>();
+
+            using (StreamReader reader = new StreamReader(csvFilePath))
+            {
+                // Skip the first three lines (header and empty lines)
+                reader.ReadLine();
+                reader.ReadLine();
+                //reader.ReadLine();
+
+                // Use a regular expression to split the line into fields only on commas that are not inside quotes
+                Regex csvParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    string[] fields = csvParser.Split(line);
+
+                    // Remove quotes from each field
+                    for (int i = 0; i < fields.Length; i++)
+                    {
+                        fields[i] = fields[i].Trim('"');
+
+                        // Remove any additional double quotes within the field
+                        fields[i] = fields[i].Replace("\"\"", "\"");
+                    }
+
+                    dataList.Add(fields);
+                }
+            }
+
+            return dataList;
+        }
+
+
         //public static List<string[]> ImportCSVToStringList(string csvFilePath)
         //{
         //    var dataList = new List<string[]>();
@@ -420,6 +458,49 @@ namespace ORH_ExcelExporterImporter
             return lineFields;
         }
 
+        public static string[] M_GetLinesFromCSV_GPT(string csvFilePath, int lineNumber)
+        {
+            string[] lineFields = null;
+
+            try
+            {
+                using (StreamReader reader = new StreamReader(csvFilePath))
+                {
+                    // Read lines until we reach the specified line number
+                    for (int i = 1; i <= lineNumber; i++)
+                    {
+                        string line = reader.ReadLine();
+
+                        if (line == null)
+                        {
+                            // Reached the end of the file before reaching the specified line number
+                            Debug.Print("Specified line number is out of range.");
+                            return null;
+                        }
+
+                        if (i == lineNumber)
+                        {
+                            lineFields = line.Split(',');
+
+                            // Trim leading and trailing whitespace from each field
+                            for (int j = 0; j < lineFields.Length; j++)
+                            {
+                                lineFields[j] = lineFields[j].Trim();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print($"An error occurred while reading the CSV file: \n{csvFilePath}");
+                Debug.Print(ex.ToString());
+                lineFields = null; // Set lineFields to null in case of an error
+            }
+
+            return lineFields;
+        }
+
         public static string[] M_GetLinesFromCSV(string csvFilePath, int lineNumber)
         {
             string[] lineFields = null;
@@ -447,6 +528,7 @@ namespace ORH_ExcelExporterImporter
                             // Remove quotes from each field
                             for (int j = 0; j < lineFields.Length; j++)
                             {
+                                //string skipDoubleQuoteinText = SkipDoubleQuoteInText(lineFields[j]);
                                 lineFields[j] = lineFields[j].Trim('"');
                             }
                         }
@@ -462,8 +544,55 @@ namespace ORH_ExcelExporterImporter
 
             return lineFields;
         }
-        //###########################################################################################
+        public static string[] M_GetLinesFromCSV_Test(string csvFilePath, int lineNumber)
+        {
+            string[] lineFields = null;
 
+            try
+            {
+                using (StreamReader reader = new StreamReader(csvFilePath))
+                {
+                    // Read lines until we reach the specified line number
+                    for (int i = 1; i <= lineNumber; i++)
+                    {
+                        string line = reader.ReadLine();
+
+                        if (line == null)
+                        {
+                            // Reached the end of the file before reaching the specified line number
+                            Debug.Print("Specified line number is out of range.");
+                            return null;
+                        }
+
+                        if (i == lineNumber)
+                        {
+                            lineFields = line.Split(',');
+
+                            // Remove quotes from each field
+                            for (int j = 0; j < lineFields.Length; j++)
+                            {
+                                //string skipDoubleQuoteinText = SkipDoubleQuoteInText(lineFields[j]);
+
+                                lineFields[j] = ReplaceDoubleDoubleQuotes($"{lineFields[j]}"); // lineFields[j].Trim('"');
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print($"An error occurred while reading the CSV file: \n{csvFilePath}");
+                Debug.Print(ex.ToString());
+                lineFields = null; // Set lineFields to null in case of an error
+            }
+
+            return lineFields;
+        }
+        //###########################################################################################
+        public static string ReplaceDoubleDoubleQuotes(string input)
+        {
+            return input.Replace("\"\"", "\\\"");
+        }
 
         public static List<string> GetAllScheduleNames(Document doc)
         {
@@ -1166,7 +1295,7 @@ namespace ORH_ExcelExporterImporter
             }
 
             // Write the modified CSV data to the same file
-            File.WriteAllLines(filePath, csvLines);
+            File.WriteAllLines(filePath, csvLines, Encoding.UTF8);
         }
 
         //###########################################################################################
@@ -1241,10 +1370,135 @@ namespace ORH_ExcelExporterImporter
             }
 
             // Write the updated lines back to the file
-            File.WriteAllLines(filePath, updatedLines);
+            File.WriteAllLines(filePath, updatedLines, Encoding.UTF8);
 
         }
 
+
+
+        public static void M_MoveCsvLastColumnToFirst_temp(string filePath)
+        {
+            // Read all lines from the CSV file
+            string[] lines = File.ReadAllLines(filePath);
+
+            // Get the header line
+            string headerLine = lines[0];
+
+            // Get the data lines excluding the header line
+            string[] dataLines = lines.Skip(1).ToArray();
+
+            // Split the header line and data lines by comma
+            string[] headerColumns = headerLine.Split(',');
+
+            // Split each data line into columns
+            string[][] dataColumns = dataLines.Select(line => SplitLine(line)).ToArray();
+
+            // Move the last column to the first column
+            for (int i = 0; i < dataColumns.Length; i++)
+            {
+                string lastColumn = dataColumns[i][dataColumns[i].Length - 1];
+
+                for (int j = dataColumns[i].Length - 1; j > 0; j--)
+                {
+                    dataColumns[i][j] = dataColumns[i][j - 1];
+                }
+
+                dataColumns[i][0] = lastColumn;
+            }
+
+            // Merge the updated header and data columns
+            string[] updatedLines = new string[dataColumns.Length + 1];
+            updatedLines[0] = string.Join(",", EscapeColumns(headerColumns));
+
+            for (int i = 0; i < dataColumns.Length; i++)
+            {
+                updatedLines[i + 1] = string.Join(",", EscapeColumns(dataColumns[i]));
+            }
+
+            // Write the updated lines back to the file
+            File.WriteAllLines(filePath, updatedLines, Encoding.UTF8);
+        }
+        private static string[] SplitLine(string line)
+        {
+            var columns = new List<string>();
+            StringBuilder columnBuilder = new StringBuilder();
+            bool inQuotes = false;
+
+            foreach (char c in line)
+            {
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    columns.Add(columnBuilder.ToString().Trim().Trim('"'));
+                    columnBuilder.Clear();
+                }
+                else
+                {
+                    columnBuilder.Append(c);
+                }
+            }
+
+            columns.Add(columnBuilder.ToString().Trim().Trim('"'));
+            return columns.ToArray();
+        }
+
+        private static string[] SplitLine_Old(string line)
+        {
+            // Custom implementation to split a CSV line while handling quotes and special characters
+            // This implementation assumes the CSV follows the standard CSV format
+
+            var columns = new List<string>();
+            StringBuilder columnBuilder = new StringBuilder();
+            bool inQuotes = false;
+
+            foreach (char c in line)
+            {
+                if (c == '"')
+                {
+                    // Toggle inQuotes flag when encountering a quote
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    // Add column to the list when encountering a comma outside quotes
+                    columns.Add(columnBuilder.ToString().Trim());
+                    columnBuilder.Clear();
+                }
+                else
+                {
+                    // Append character to the current column
+                    columnBuilder.Append(c);
+                }
+            }
+
+            // Add the last column to the list
+            columns.Add(columnBuilder.ToString().Trim());
+
+            return columns.ToArray();
+        }
+
+        private static string[] EscapeColumns(string[] columns)
+        {
+            // Custom implementation to escape quotes and special characters in CSV columns
+            // Modify this method according to your specific escaping requirements
+
+            for (int i = 0; i < columns.Length; i++)
+            {
+                // Escape double quotes by doubling them
+                columns[i] = columns[i].Replace("\"", "\"\"");
+
+                // Add additional escaping logic for special characters if needed
+                // Modify the escaping rules based on your specific use case
+                // For example, you may need to escape newlines, tabs, or specific symbols
+            }
+
+            return columns;
+        }
+
+        //###########################################################################################
         public void AddScheduleUniqueIdToA1_Old(string filePath, string newText)
         {
             // Read the existing CSV file
@@ -1275,7 +1529,7 @@ namespace ORH_ExcelExporterImporter
             }
 
             // Write the modified lines back to the CSV file
-            File.WriteAllLines(filePath, lines);
+            File.WriteAllLines(filePath, lines, Encoding.UTF8);
         }
         public void AddScheduleUniqueIdToA1(string filePath, string newText)
         {
@@ -1301,7 +1555,7 @@ namespace ORH_ExcelExporterImporter
             }
 
             // Write the modified lines back to the CSV file
-            File.WriteAllLines(filePath, lines);
+            File.WriteAllLines(filePath, lines, Encoding.UTF8);
         }
 
         //###########################################################################################
@@ -1375,7 +1629,7 @@ namespace ORH_ExcelExporterImporter
                 }
 
                 // Write the modified lines back to the CSV file
-                System.IO.File.WriteAllLines(csvFilePath, lines);
+                System.IO.File.WriteAllLines(csvFilePath, lines, Encoding.UTF8);
             }
         }
         //##############################################################
@@ -1455,5 +1709,39 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             // ...
         }
 
+
+        // Testing ======
+
+        //public List<string> GetVisibleParametersInSchedule(ViewSchedule schedule)
+        //{
+        //    List<string> visibleParameters = new List<string>();
+
+        //    // Get the schedule fields
+        //    IList<SchedulableField> schedulableFields = schedule.Definition.GetSchedulableFields();
+
+        //    ParameterSet paramSet = schedule.Parameters;
+
+        //    // Iterate over each field in the schedule
+        //    foreach (SchedulableField field in schedulableFields)
+        //    {
+        //        // Get the parameter associated with the field
+        //        //Parameter parameter = field.GetFieldId().GetField(schedule.Document).GetDefinition();
+        //        Parameter parameter = schedule.Parameters;
+
+
+        //        if (parameter != null)
+        //        {
+        //            string parameterName = parameter.Name;
+
+        //            // Add the parameter name to the list of visible parameters
+        //            visibleParameters.Add(parameterName);
+        //        }
+        //    }
+
+        //    return visibleParameters;
+        //}
+
+
+        // End Testing ======
     }
 }
