@@ -20,6 +20,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
 using Autodesk.Revit.UI;
 
+using Microsoft.VisualBasic.FileIO;
 using Microsoft.Win32;
 
 using OfficeOpenXml;
@@ -300,135 +301,46 @@ namespace ORH_ExcelExporterImporter
             return null;
         }
         //###########################################################################################
-        public static List<string[]> ImportCSVToStringList(string csvFilePath)
-        {
-            var dataList = new List<string[]>();
-
-            using (StreamReader reader = new StreamReader(csvFilePath))
-            {
-                // Skip the first three lines (header and empty lines)
-                reader.ReadLine();
-                reader.ReadLine();
-                reader.ReadLine();
-
-                // Use a regular expression to split the line into fields only on commas that are not inside quotes
-                Regex csvParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    string[] fields = csvParser.Split(line);
-
-                    // Remove quotes from each field
-                    for (int i = 0; i < fields.Length; i++)
-                    {
-                        fields[i] = fields[i].Trim('"');
-                    }
-
-                    dataList.Add(fields);
-                }
-            }
-
-            return dataList;
-        }
         public static List<string[]> ImportCSVToStringList2(string csvFilePath)
         {
             var dataList = new List<string[]>();
 
-            using (StreamReader reader = new StreamReader(csvFilePath))
+            // Create a TextFieldParser to parse the CSV file
+            using (TextFieldParser parser = new TextFieldParser(csvFilePath))
             {
-                // Skip the first three lines (header and empty lines)
-                reader.ReadLine();
-                reader.ReadLine();
-                //reader.ReadLine();
+                // Set the delimiter to comma
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
 
-                // Use a regular expression to split the line into fields only on commas that are not inside quotes
-                Regex csvParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+                // Set the option to handle fields enclosed in quotes
+                parser.HasFieldsEnclosedInQuotes = true;
 
-                while (!reader.EndOfStream)
+                // Skip the first two lines
+                if (!parser.EndOfData)
                 {
-                    string line = reader.ReadLine();
-                    string[] fields = csvParser.Split(line);
+                    parser.ReadLine();
+                }
 
-                    // Remove quotes from each field
-                    for (int i = 0; i < fields.Length; i++)
-                    {
-                        fields[i] = fields[i].Trim('"');
-                    }
+                if (!parser.EndOfData)
+                {
+                    parser.ReadLine();
+                }
 
+                // Read each line of the CSV file
+                while (!parser.EndOfData)
+                {
+                    // Read the fields of the current line
+                    string[] fields = parser.ReadFields();
+
+                    // Add the fields to the dataList collection
                     dataList.Add(fields);
                 }
             }
 
+            // Return the parsed data as a list of string arrays
             return dataList;
         }
 
-
-
-        public static List<string[]> ImportCSVToStringList2_NoGood1(string csvFilePath)
-        {
-            var dataList = new List<string[]>();
-
-            using (StreamReader reader = new StreamReader(csvFilePath))
-            {
-                // Skip the first three lines (header and empty lines)
-                reader.ReadLine();
-                reader.ReadLine();
-                //reader.ReadLine();
-
-                // Use a regular expression to split the line into fields only on commas that are not inside quotes
-                Regex csvParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    string[] fields = csvParser.Split(line);
-
-                    // Remove quotes from each field
-                    for (int i = 0; i < fields.Length; i++)
-                    {
-                        fields[i] = fields[i].Trim('"');
-
-                        // Remove any additional double quotes within the field
-                        fields[i] = fields[i].Replace("\"\"", "\"");
-                    }
-
-                    dataList.Add(fields);
-                }
-            }
-
-            return dataList;
-        }
-
-
-        //public static List<string[]> ImportCSVToStringList(string csvFilePath)
-        //{
-        //    var dataList = new List<string[]>();
-
-        //    using (StreamReader reader = new StreamReader(csvFilePath))
-        //    {
-        //        // Skip the first three lines (header and empty lines)
-        //        reader.ReadLine();
-        //        reader.ReadLine();
-        //        reader.ReadLine();
-
-        //        while (!reader.EndOfStream)
-        //        {
-        //            string line = reader.ReadLine();
-        //            string[] fields = line.Split(',');
-
-        //            // Remove quotes from each field
-        //            for (int i = 0; i < fields.Length; i++)
-        //            {
-        //                fields[i] = fields[i].Trim('"');
-        //            }
-
-        //            dataList.Add(fields);
-        //        }
-        //    }
-
-        //    return dataList;
-        //}
         //###########################################################################################
 
 
