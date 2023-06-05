@@ -1,6 +1,7 @@
 #region Namespaces
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,8 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.Creation;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+
+using OfficeOpenXml;
 #endregion
 
 namespace ORH_ExcelExporterImporter
@@ -51,9 +54,29 @@ namespace ORH_ExcelExporterImporter
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
+            //var schedule = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule; // Get specific Schedule into a list
+            //var schedule = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule;
+            //var schedules = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Construction Documents") as ViewSchedule;
 
+            //var schedule = _schedulesList[7];
+
+            #region Testin
+            if (true)
+            {
+                string _excelFilePath = $"{_path}\\Test.xlsx";
+                ExcelPackage excelFile = Create_ExcelFile(_excelFilePath);
+                ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
+                foreach (ViewSchedule schedule in _schedulesList)
+                {
+                    ExcelWorksheet worksheet = workbook.Worksheets.Add(schedule.Name);
+                    ExportViewScheduleBasic(schedule, worksheet);
+                }
+                excelFile.Save();
+                excelFile.Dispose();
+                return Result.Succeeded;
+            }
+            #endregion
 
             // Exported schedule names will be added to "_exportedSchedules" to notify the user at the end.
             string _exportedSchedules = "";

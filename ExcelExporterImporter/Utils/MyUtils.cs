@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1429,5 +1431,69 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
 
         // End Testing ======
+
+
+        public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            var dt = new DataTable();
+            //Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var fieldType = typeof(string);
+                var columnName = field.ColumnHeading;
+                var i = 1;
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            //Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+            if (nRows > 1)
+                //Starts at 1 so as not to display the header
+                for (var i = 1; i < nRows; i++)
+                {
+                    var data = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                    }
+
+                    dt.Rows.Add(data);
+                }
+
+            if (dt.Rows.Count > 0)
+            {
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                //RevitUtilities.AutoFitAllCol(worksheet);
+            }
+        }
+
+        public static ExcelPackage Create_ExcelFile(string filePath)
+        {
+            // Set EPPlus license context
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
+
+            // Open Excel file using EPPlus library
+            ExcelPackage excelFile = new ExcelPackage(filePath);  // Create an instance of ExcelPackage by providing the file path
+            //ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
+            // ExcelWorksheet worksheet = workbook.Worksheets[1];  // Get the first worksheet (index 0) from the workbook
+            //ExcelWorksheet worksheet = workbook.Worksheets.Add("Sheet1");
+
+            return excelFile;
+        }
+
     }
 }
