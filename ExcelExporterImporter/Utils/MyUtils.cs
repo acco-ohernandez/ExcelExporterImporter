@@ -223,22 +223,6 @@ namespace ORH_ExcelExporterImporter
 
 
         //###########################################################################################
-        //public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
-        //{
-        //    var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id);
-        //    var element = _scheduleItemsCollector.FirstOrDefault(e => e.UniqueId == _uniqueId);
-
-        //    if (element != null)
-        //    {
-        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {element.GetType()} - UID: {element.UniqueId} === ELEMENT RETURNED!"); // only for Debug
-        //    }
-        //    else
-        //    {
-        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: Element not found with UniqueId {_uniqueId}");
-        //    }
-
-        //    return element;
-        //}
         public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
         {
             //---Gets the list of items/rows in the schedule---
@@ -257,23 +241,6 @@ namespace ORH_ExcelExporterImporter
                 return null;
             }
         }
-        //public static Element _getElementOnViewScheduleRowByUniqueId(Document doc, ViewSchedule _selectedSchedule, string _uniqueId)
-        //{
-        //    //---Gets the list of items/rows in the schedule---
-        //    var _scheduleItemsCollector = new FilteredElementCollector(doc, _selectedSchedule.Id);//.WhereElementIsNotElementType();
-        //    foreach (Element _scheduleRow in _scheduleItemsCollector)
-        //    {
-        //        if (_scheduleRow.UniqueId == _uniqueId)
-        //        {
-        //            Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === ELEMENT RETURNED!"); // only for Debug
-
-        //            return _scheduleRow;
-        //        }
-        //        Debug.Print($"Method _getElementOnViewScheduleRowByUniqueId: {_scheduleRow.GetType()} - UID: {_scheduleRow.UniqueId} === Not Returned"); // only for Debug
-        //    }
-        //    return null;
-        //}
-
 
 
         //###########################################################################################
@@ -306,7 +273,7 @@ namespace ORH_ExcelExporterImporter
             var dataList = new List<string[]>();
 
             // Create a TextFieldParser to parse the CSV file
-            using (TextFieldParser parser = new TextFieldParser(csvFilePath))
+            using (TextFieldParser parser = new TextFieldParser(csvFilePath)) // Requires the Microsoft.VisualBasic namespace reference and using Microsoft.VisualBasic.FileIO;
             {
                 // Set the delimiter to comma
                 parser.TextFieldType = FieldType.Delimited;
@@ -343,75 +310,6 @@ namespace ORH_ExcelExporterImporter
 
         //###########################################################################################
 
-
-        public static string[] M_GetLinesFromCSV_Old(string csvFilePath, int lineNumber)
-        {
-            string[] lineFields = null;
-
-            using (StreamReader reader = new StreamReader(csvFilePath))
-            {
-                // Read lines until we reach the specified line number
-                for (int i = 1; i <= lineNumber; i++)
-                {
-                    string line = reader.ReadLine();
-                    if (i == lineNumber)
-                    {
-                        lineFields = line.Split(',');
-
-                        // Remove quotes from each field
-                        for (int j = 0; j < lineFields.Length; j++)
-                        {
-                            lineFields[j] = lineFields[j].Trim('"');
-                        }
-                    }
-                }
-            }
-
-            return lineFields;
-        }
-
-        public static string[] M_GetLinesFromCSV_GPT(string csvFilePath, int lineNumber)
-        {
-            string[] lineFields = null;
-
-            try
-            {
-                using (StreamReader reader = new StreamReader(csvFilePath))
-                {
-                    // Read lines until we reach the specified line number
-                    for (int i = 1; i <= lineNumber; i++)
-                    {
-                        string line = reader.ReadLine();
-
-                        if (line == null)
-                        {
-                            // Reached the end of the file before reaching the specified line number
-                            Debug.Print("Specified line number is out of range.");
-                            return null;
-                        }
-
-                        if (i == lineNumber)
-                        {
-                            lineFields = line.Split(',');
-
-                            // Trim leading and trailing whitespace from each field
-                            for (int j = 0; j < lineFields.Length; j++)
-                            {
-                                lineFields[j] = lineFields[j].Trim();
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print($"An error occurred while reading the CSV file: \n{csvFilePath}");
-                Debug.Print(ex.ToString());
-                lineFields = null; // Set lineFields to null in case of an error
-            }
-
-            return lineFields;
-        }
 
         public static string[] M_GetLinesFromCSV(string csvFilePath, int lineNumber)
         {
@@ -456,55 +354,8 @@ namespace ORH_ExcelExporterImporter
 
             return lineFields;
         }
-        public static string[] M_GetLinesFromCSV_Test(string csvFilePath, int lineNumber)
-        {
-            string[] lineFields = null;
 
-            try
-            {
-                using (StreamReader reader = new StreamReader(csvFilePath))
-                {
-                    // Read lines until we reach the specified line number
-                    for (int i = 1; i <= lineNumber; i++)
-                    {
-                        string line = reader.ReadLine();
-
-                        if (line == null)
-                        {
-                            // Reached the end of the file before reaching the specified line number
-                            Debug.Print("Specified line number is out of range.");
-                            return null;
-                        }
-
-                        if (i == lineNumber)
-                        {
-                            lineFields = line.Split(',');
-
-                            // Remove quotes from each field
-                            for (int j = 0; j < lineFields.Length; j++)
-                            {
-                                //string skipDoubleQuoteinText = SkipDoubleQuoteInText(lineFields[j]);
-
-                                lineFields[j] = ReplaceDoubleDoubleQuotes($"{lineFields[j]}"); // lineFields[j].Trim('"');
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print($"An error occurred while reading the CSV file: \n{csvFilePath}");
-                Debug.Print(ex.ToString());
-                lineFields = null; // Set lineFields to null in case of an error
-            }
-
-            return lineFields;
-        }
         //###########################################################################################
-        public static string ReplaceDoubleDoubleQuotes(string input)
-        {
-            return input.Replace("\"\"", "\\\"");
-        }
 
         public static List<string> GetAllScheduleNames(Document doc)
         {
@@ -524,6 +375,7 @@ namespace ORH_ExcelExporterImporter
             }
             return _curDocScheduleUniqueIds;
         }
+        //###########################################################################################
         public static string _UpdateViewSchedule(Autodesk.Revit.DB.Document doc, string viewScheduleUniqueIdFromCSV, string[] headersFromCSV, List<string[]> viewScheduledataRows)
         {
             string _updatesResult = null;
@@ -538,10 +390,6 @@ namespace ORH_ExcelExporterImporter
                 foreach (var _viewScheduledataRow in viewScheduledataRows) // Loop through the dataRows from viewScheduledataRows
                 {
                     string _curCsvRowUniqueId = _viewScheduledataRow[0];  // Get the Unique Id from the current Row
-
-
-
-
 
                     Element _curRowElement =
                         _getElementOnViewScheduleRowByUniqueId(doc, _viewScheduleToUpdate, _curCsvRowUniqueId); // Get Element on ViewSchedule Row by UniqueId
@@ -563,6 +411,85 @@ namespace ORH_ExcelExporterImporter
                             {
                                 string paramName = null;
                                 paramName = parameter.Definition.Name; // Get the name of the parameter
+
+
+                                if (parameter.IsShared)// test
+                                {
+                                    var paramGuid = parameter.GUID; // Get the name of the parameter
+                                }
+
+                                Debug.Print(paramName);
+
+                                if (paramName == _curCsvHeaderName && parameter != null && parameter.StorageType == StorageType.String && !parameter.IsReadOnly)
+                                {
+
+                                    string _valueFromCsv = _viewScheduledataRow[_headerColumnNumber];
+                                    parameter.Set(_valueFromCsv);
+                                    //// Check if the CSV value is not empty before updating the parameter
+                                    //if (!string.IsNullOrEmpty(_viewScheduledataRow[_headerColumnNumber]))
+                                    //{
+                                    //    string _valueFromCsv = _viewScheduledataRow[_headerColumnNumber];
+                                    //    parameter.Set(_valueFromCsv);
+                                    //}
+                                    //else
+                                    //{
+                                    //    if (parameter.HasValue && parameter.IsShared)
+                                    //        parameter.ClearValue();
+                                    //}
+
+                                }
+
+                            }
+                        }
+
+                    }
+
+                }
+            }
+
+            return _updatesResult;
+        }
+        public static string _UpdateViewSchedule_KindaWorking(Autodesk.Revit.DB.Document doc, string viewScheduleUniqueIdFromCSV, string[] headersFromCSV, List<string[]> viewScheduledataRows)
+        {
+            string _updatesResult = null;
+            ViewSchedule _viewScheduleToUpdate = M_GetViewScheduleByUniqueId(doc, viewScheduleUniqueIdFromCSV);
+            if (_viewScheduleToUpdate != null)
+            {
+                _updatesResult += $"\n=== Updating ViewSchedule:{_viewScheduleToUpdate.Name} ===\n";
+
+                List<Element> _rowsElementsOnViewSchedule =
+                _GetElementsOnScheduleRow(doc, _viewScheduleToUpdate); // Get the list of Elements on Rows of the _viewScheduleToUpdate
+
+                foreach (var _viewScheduledataRow in viewScheduledataRows) // Loop through the dataRows from viewScheduledataRows
+                {
+                    string _curCsvRowUniqueId = _viewScheduledataRow[0];  // Get the Unique Id from the current Row
+
+                    Element _curRowElement =
+                        _getElementOnViewScheduleRowByUniqueId(doc, _viewScheduleToUpdate, _curCsvRowUniqueId); // Get Element on ViewSchedule Row by UniqueId
+
+                    // if the Element from the _curCsvRowUniqueId does not exist in the current schedule, skip it.
+                    if (_curRowElement != null)
+                    {
+                        ParameterSet paramSet = _curRowElement.Parameters; // Get the parameters of the current row element in the _viewScheduleToUpdate
+
+                        int headerCount = headersFromCSV.Count();
+                        for (int i = 1; i < headerCount; i++)
+                        {
+                            int _headerColumnNumber = i;
+                            string _curCsvHeaderName = headersFromCSV[_headerColumnNumber];
+                            _curCsvHeaderName = _curCsvHeaderName.Trim();
+                            Debug.Print(_curCsvHeaderName);
+
+                            foreach (Parameter parameter in paramSet)
+                            {
+                                string paramName = null;
+                                paramName = parameter.Definition.Name; // Get the name of the parameter
+
+                                if (parameter.IsShared)// test
+                                {
+                                    var paramGuid = parameter.GUID; // Get the name of the parameter
+                                }
+
                                 Debug.Print(paramName);
 
                                 if (paramName == _curCsvHeaderName && parameter != null && parameter.StorageType == StorageType.String && !parameter.IsReadOnly)
@@ -696,11 +623,6 @@ namespace ORH_ExcelExporterImporter
         //###########################################################################################
         public static void _UpdateMyUniqueIDColumn(Document doc, string _viewScheduleName)
         {
-            //using (Transaction tx = new Transaction(doc, $"Update Parameters")) // Start a new transaction to make changes to the elements in Revit
-            //{
-            //    tx.Start(); // Lock the doc while changes are made in the transaction
-
-
             ViewSchedule _viewScheduleToUpdate = M_GetViewScheduleByName(doc, _viewScheduleName); // Get the schedule by name
             List<Element> _rowsElementsOnViewSchedule = _GetElementsOnScheduleRow(doc, _viewScheduleToUpdate); // Get the list of Elements on Rows of the _viewScheduleToUpdate
             foreach (Element _rowElement in _rowsElementsOnViewSchedule)
@@ -721,13 +643,11 @@ namespace ORH_ExcelExporterImporter
                     {
                         // Get the parameter's value.
                         param.Set($"{_rowElement.UniqueId}");
+                        break;
                     }
                 }
 
             }
-
-            //    tx.Commit();
-            //}
 
 
             //TaskDialog.Show("Info", "Added UniqueIDs to MyUniqueId Column");
@@ -855,152 +775,6 @@ namespace ORH_ExcelExporterImporter
             return originalSharedParametersFile;
         }
 
-        public static void addSharedParamToSchedule(Document doc, Autodesk.Revit.ApplicationServices.Application app, string scheduleName)
-        {
-            var originalSharedParametersFilename = app.SharedParametersFilename;
-            // Create a new Revit application object.
-            //Application app = new Application();
-
-            // Set the SharedParametersFilename property to the path of the shared parameters file.
-            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
-            app.SharedParametersFilename = M_CreateSharedParametersFile();
-
-            // Open the shared parameters file.
-            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
-
-            DefinitionGroup definitionGroup = sharedParameterFile.Groups.get_Item("Dev_Group_Common");
-            Definition definition = definitionGroup.Definitions.get_Item("Dev_Text_1");
-            GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
-
-            ViewSchedule scheduleView = M_GetViewScheduleByName(doc, scheduleName);
-
-            // Get the schedule definition from the view
-            ScheduleDefinition scheduleDef = scheduleView.Definition;
-
-            // Create the schedule field using the shared parameter
-            //ScheduleField scheduleField = scheduleDef.AddField(definition);
-
-            // Modify any additional properties of the schedule field if needed
-            // scheduleField.ColumnHeading = "Dev Text 1";
-
-            // Refresh the schedule to reflect the changes
-            scheduleView.Document.Regenerate();
-
-            //// Save the document if necessary
-            //scheduleView.Document.Save();
-
-
-
-            /////////////////////////
-            ////(Document doc, string scheduleName, string fieldName)
-
-            //ViewSchedule schedule = M_GetViewScheduleByName(doc, scheduleName);
-
-            //// Get the definition of the schedule.
-            //ScheduleDefinition definition = schedule.Definition;
-
-            //var t = definition.par
-
-            //// Get the list of available fields.
-            //IList<SchedulableField> availableFields = definition.GetSchedulableFields();
-
-            //// Find the field you want to add.
-            //SchedulableField field = availableFields.FirstOrDefault(f => f.GetName(doc) == "Dev_Text_1");//fieldName);
-
-            //// Add the field to the schedule.
-            //var fieldAdded = definition.AddField(field);
-
-            //app.SharedParametersFilename = originalSharedParametersFilename;
-            ////return fieldAdded;
-
-
-        }
-
-
-        public static void M_Add_Dev_Text_1(Autodesk.Revit.ApplicationServices.Application app, Document doc, string _curScheduleName, BuiltInCategory _builtInCat)
-        {
-            var sv = M_GetViewScheduleByName(doc, _curScheduleName);
-            var i = sv.Category;
-
-            //define category for shared param
-            //Category myCat = doc.Settings.Categories.get_Item(BuiltInCategory.OST_MechanicalEquipment);
-            Category myCat = doc.Settings.Categories.get_Item(_builtInCat);
-            CategorySet myCatSet = doc.Application.Create.NewCategorySet();
-            myCatSet.Insert(myCat);
-
-            app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
-
-            var originalSharedParametersFilename = app.SharedParametersFilename;
-            // Set the SharedParametersFilename property to the path of the shared parameters file.
-            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
-            app.SharedParametersFilename = M_CreateSharedParametersFile();
-
-            // Open the shared parameters file.
-            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
-            var curDef = MyUtils.GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
-            //create binding
-            ElementBinding curBinding = doc.Application.Create.NewInstanceBinding(myCatSet);
-
-            using (Transaction tx = new Transaction(doc, $"AddParam")) // Start a new transaction to make changes to the elements in Revit
-            {
-                tx.Start();
-                //insert definition into binding
-                //using (Transaction curTrans = new Transaction(doc, "Added Shared Parameter"))
-                //{
-                //    if (curTrans.Start() == TransactionStatus.Started)
-                //    {
-                //        //do something
-                var paramAdded = doc.ParameterBindings.Insert(curDef, curBinding, BuiltInParameterGroup.PG_IDENTITY_DATA);
-                //    }
-
-                //    //commit changes
-                //    //curTrans.RollBack();
-                //    curTrans.Commit();
-                //}
-
-                //var af = 
-                M_AddByNameAvailableFieldToSchedule(doc, _curScheduleName, "Dev_Text_1");
-                _UpdateMyUniqueIDColumn(doc, _curScheduleName);
-                tx.Commit();
-                //tx.RollBack();
-            }
-
-            // Set the SharedParametersFilename property to the path of the shared parameters file.
-            app.SharedParametersFilename = originalSharedParametersFilename;
-            //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
-            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
-
-        }
-
-        public static void M_Add_Dev_Text_3(Autodesk.Revit.ApplicationServices.Application app, Document doc, ViewSchedule _curSchedule, CategorySet myCatSet)
-        {
-            //define category for shared param
-
-
-            //app.SharedParametersFilename = @"Y:\\DATABASES\\ACCORevit\\02-SHARED PARAMETERS\\ACCO -- Revit Shared Parameters.txt";
-            var originalSharedParametersFilename = app.SharedParametersFilename;
-
-            // Set the SharedParametersFilename property to the path of the shared parameters file.
-            //app.SharedParametersFilename = @"C:\Users\ohernandez\Desktop\Revit_Exports\SharedParams\ACCO -- Dev_Revit Shared Parameters.txt";
-            app.SharedParametersFilename = M_CreateSharedParametersFile();
-
-            // Open the shared parameters file.
-            DefinitionFile sharedParameterFile = app.OpenSharedParameterFile();
-            var curDef = MyUtils.GetParameterDefinitionFromFile(sharedParameterFile, "Dev_Group_Common", "Dev_Text_1");
-            //create binding
-            ElementBinding curBinding = doc.Application.Create.NewInstanceBinding(myCatSet);
-
-            var paramAdded = doc.ParameterBindings.Insert(curDef, curBinding, BuiltInParameterGroup.PG_IDENTITY_DATA);
-
-            //var af =
-            M_AddByNameAvailableFieldToSchedule(doc, _curSchedule.Name, "Dev_Text_1");
-            _UpdateMyUniqueIDColumn(doc, _curSchedule.Name);
-
-            app.SharedParametersFilename = originalSharedParametersFilename;
-
-            _curSchedule.Document.Regenerate();
-        }
-
 
         public static void M_Add_Dev_Text_4(Autodesk.Revit.ApplicationServices.Application app, Document doc, ViewSchedule _curSchedule, CategorySet myCatSet)
         {
@@ -1031,7 +805,7 @@ namespace ORH_ExcelExporterImporter
                 // Add the available field to the schedule
                 M_AddByNameAvailableFieldToSchedule(doc, _curSchedule.Name, "Dev_Text_1");
 
-                // Update the Unique ID column
+                // Update the "Dev_Text_1" column with the UniqueID 
                 _UpdateMyUniqueIDColumn(doc, _curSchedule.Name);
 
                 // Restore the original shared parameters filename
@@ -1443,7 +1217,7 @@ namespace ORH_ExcelExporterImporter
             // Write the modified lines back to the CSV file
             File.WriteAllLines(filePath, lines, Encoding.UTF8);
         }
-        public void AddScheduleUniqueIdToA1(string filePath, string newText)
+        public void M_AddScheduleUniqueIdToCellA1(string filePath, string newText)
         {
             // Read the existing CSV file
             string[] lines = File.ReadAllLines(filePath);
@@ -1607,9 +1381,9 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             catch (IOException ex)
             {
                 // The file is locked, prompt the user to close Excel before continuing
-                M_MyTaskDialog("Warning:", $"The CSV file is currently locked by Excel. " +
+                M_MyTaskDialog("Warning:", $"The CSV file below is currently locked by Excel: " +
                                            $"\n{fileName} " +
-                                           $"\n\nPlease close Excel BEFORE CONTINUING!");
+                                           $"\n\nPlease close Excel, \nthen click CLOSE to continue!");
                 //return;
             }
             finally

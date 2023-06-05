@@ -82,6 +82,7 @@ namespace ORH_ExcelExporterImporter
 
                     // Get all the categegories that allow AllowsBoundParameters as a set 
                     CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, _curViewSchedule);
+                    // Add the "Dev_Text_1" parameter to be used for the UniqueID of the row element during export.
                     M_Add_Dev_Text_4(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
                     // Create a new instance of ViewScheduleExportOptions
@@ -117,7 +118,7 @@ namespace ORH_ExcelExporterImporter
                     string _fileFullPath = $"{_path}\\{_fileName}";
                     M_MoveCsvLastColumnToFirst(_fileFullPath);
 
-                    AddScheduleUniqueIdToA1(_fileFullPath, $"{_curViewSchedule.UniqueId}");
+                    M_AddScheduleUniqueIdToCellA1(_fileFullPath, $"{_curViewSchedule.UniqueId}");
                     #endregion
 
                     t.RollBack();

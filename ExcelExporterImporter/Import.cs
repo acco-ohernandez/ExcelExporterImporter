@@ -48,36 +48,6 @@ namespace ORH_ExcelExporterImporter
             #endregion
             #endregion
 
-            //Testing
-            if (false)
-            {
-                //using (Transaction t = new Transaction(doc, "Added param to sched"))
-                //{
-                //    t.Start();
-                //    var af = M_AddByNameAvailableFieldToSchedule(doc, "Mechanical Equipment Schedule", "Count");
-                //    t.Commit();
-                //}
-
-                //var allBiltInCats = _GetAllBuiltInCategories();
-
-                var schedule = M_GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
-
-                BuiltInCategory _scheduleBuiltInCategory = M_GetScheduleBuiltInCategory(doc, schedule);
-
-                //M_Add_Dev_Text_1(app, doc, "Mechanical Equipment Schedule", biCat);
-                M_Add_Dev_Text_1(app, doc, schedule.Name, _scheduleBuiltInCategory);
-
-
-                //var schedule = M_GetViewScheduleByName(doc, "Mechanical Equipment Schedule");
-                //var fistElemCategory = _GetElementsOnScheduleRow(doc, schedule).FirstOrDefault();
-
-                //BuiltInCategory elementBuiltInCategory = _GetElementBuiltInCategory(fistElemCategory);
-                //BuiltInCategory cat = _GetScheduleBuiltInCategory(schedule);
-
-
-                //M_Add_Dev_Text_1(app, doc, "Mechanical Equipment Schedule", elementBuiltInCategory);
-                return Result.Succeeded;
-            }
 
             // ================= Import CSVs =================
             string[] csvFilePaths = GetCsvFilePath(); // Get CSV file paths
@@ -98,8 +68,12 @@ namespace ORH_ExcelExporterImporter
                 CheckAndPromptToCloseExcel(csvFilePath); // Tell the user to close excel before continueing
 
                 string _viewScheduleUniqueIdFromCSV = null;
-                try { _viewScheduleUniqueIdFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[0]; }  // Get View schedule name from csv
-                catch (Exception) { continue; }
+                try
+                {
+                    _viewScheduleUniqueIdFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[0];
+                    if (_viewScheduleUniqueIdFromCSV == null) { return Result.Failed; }
+                }  // Get View schedule name from csv
+                catch (Exception) { return Result.Failed; }
 
                 var _viewScheduleNameFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[1];  // Get View schedule UniqueId from csv
 
@@ -109,7 +83,7 @@ namespace ORH_ExcelExporterImporter
                     Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
 
                     var _headersFromCSV = M_GetLinesFromCSV(csvFilePath, 2);                   // Get Headers from csv
-                    List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 3 lines
+                    List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 2 lines
                     csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
 
 
