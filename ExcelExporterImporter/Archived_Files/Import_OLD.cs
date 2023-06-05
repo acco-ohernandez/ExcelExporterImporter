@@ -186,13 +186,13 @@ namespace ORH_ExcelExporterImporter
             string csvScheduleNamesNotFound = null; // Track Not Found Schedules
             foreach (var csvFilePath in csvFilePaths)  // Loop Through all the selected CSVs
             {
-                var _viewScheduleNameFromCSV = GetLineFromCSV(csvFilePath, 1)[0];  // Get View schedule name from csv
+                var _viewScheduleNameFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[0];  // Get View schedule name from csv
                 if (_curDocScheduleNames.Contains(_viewScheduleNameFromCSV))
                 {
                     Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
 
-                    var _headersFromCSV = GetLineFromCSV(csvFilePath, 2);                   // Get Headers from csv
-                    List<string[]> _viewScheduledata = ImportCSVToStringList(csvFilePath);  // Get data from csv - skips the first 3 lines
+                    var _headersFromCSV = M_GetLinesFromCSV(csvFilePath, 2);                   // Get Headers from csv
+                    List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 3 lines
                     csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
 
                     using (Transaction tx = new Transaction(doc, $"Update {_viewScheduleNameFromCSV} Parameters")) // Start a new transaction to make changes to the elements in Revit
@@ -370,5 +370,6 @@ namespace ORH_ExcelExporterImporter
             var method = MethodBase.GetCurrentMethod().DeclaringType?.FullName;
             return method;
         }
+
     }
 }

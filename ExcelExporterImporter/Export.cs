@@ -40,7 +40,7 @@ namespace ORH_ExcelExporterImporter
             // get form data and do something
             #endregion
 
-            //string _path = @"C:\Users\ohernandez\Desktop\Revit_Exports";
+            // Create Revit_Exports on desktop if it doesn't exist
             string _FolderName = "Revit_Exports";
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
@@ -54,19 +54,21 @@ namespace ORH_ExcelExporterImporter
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "_Straight Pipe Takeoffs"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
 
-            // ================= ExportSelectedSchedules =================
+
+            // Exported schedule names will be added to "_exportedSchedules" to notify the user at the end.
             string _exportedSchedules = "";
 
-            if (false) // set TRUE only for testing a piece of code without running the entire class
+            // set TRUE only for testing a piece of code without running the entire class
+            if (false)
             {
                 //Place the code you wanto test here 
 
                 return Result.Succeeded;
             }
 
-            using (Transaction t = new Transaction(doc, "Added param to sched"))
+            // ================= ExportSelectedSchedules =================
+            using (Transaction t = new Transaction(doc, "Exported Schedules"))
             {
-                //t.Start();
                 foreach (var _curViewSchedule in _schedulesList)
                 {
                     t.Start();
@@ -80,7 +82,8 @@ namespace ORH_ExcelExporterImporter
 
                     // Get all the categegories that allow AllowsBoundParameters as a set 
                     CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, _curViewSchedule);
-                    M_Add_Dev_Text_3(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
+                    // Add the "Dev_Text_1" parameter to be used for the UniqueID of the row element during export.
+                    M_Add_Dev_Text_4(app, doc, _curViewSchedule, _scheduleBuiltInCategory);
 
                     // Create a new instance of ViewScheduleExportOptions
                     ViewScheduleExportOptions exportOptions = new ViewScheduleExportOptions();
@@ -107,20 +110,26 @@ namespace ORH_ExcelExporterImporter
                     //var _listOfUniqueIds = _listOfUniqueIdsInScheduleView(doc, _curViewSchedule);
                     //string _curFilePath = $"{_path}\\{_name}";
                     //AddUniqueIdColumnToViewScheduleCsv(_curFilePath, _listOfUniqueIds);
-                    //######
+
+                    //Update the Result string for the output TaskDialog
                     _exportedSchedules += $"{_curViewSchedule.Name}\n";
 
-                    M_MoveCsvLastColumnToFirst($"{_path}\\{_fileName}");
-                    //M_MoveCsvLastColumnToFirst2($"{_path}\\{_fileName}");
+                    #region Update the output CSV with additional changes.
+                    string _fileFullPath = $"{_path}\\{_fileName}";
+                    M_MoveCsvLastColumnToFirst(_fileFullPath);
+
+                    M_AddScheduleUniqueIdToCellA1(_fileFullPath, $"{_curViewSchedule.UniqueId}");
+                    #endregion
+
                     t.RollBack();
                 }
+
+                // Notify the user of the exported schedules.
                 // using my _MyTaskDialog Method. Removes the prefix on the Title
                 M_MyTaskDialog("Exported Schedules:", _exportedSchedules);
-
-                //t.Commit();
             }
             // Open Windows Explorer to the folder path
-            System.Diagnostics.Process.Start("explorer.exe", _path);
+            Process.Start("explorer.exe", _path);
 
             return Result.Succeeded;
         }
