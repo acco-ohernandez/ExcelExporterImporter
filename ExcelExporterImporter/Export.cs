@@ -52,28 +52,49 @@ namespace ORH_ExcelExporterImporter
 
             // ================= Get Specific Schedule =================
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
             //var schedule = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule; // Get specific Schedule into a list
             //var schedule = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule;
             //var schedules = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Construction Documents") as ViewSchedule;
+            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
+
 
             //var schedule = _schedulesList[7];
 
             #region Testin
             if (true)
             {
-                string _excelFilePath = $"{_path}\\Test.xlsx";
+                string docName = doc.Title;
+                string _excelFilePath = $"{_path}\\{docName}.xlsx";
+                if (File.Exists(_excelFilePath)) File.Delete(_excelFilePath); // If the file exists, delete it.
+
                 ExcelPackage excelFile = Create_ExcelFile(_excelFilePath);
                 ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
-                foreach (ViewSchedule schedule in _schedulesList)
+                int prefix = 1;
+                using (Transaction t = new Transaction(doc, "Exported Schedules"))
                 {
-                    ExcelWorksheet worksheet = workbook.Worksheets.Add(schedule.Name);
-                    ExportViewScheduleBasic(schedule, worksheet);
+                    t.Start();
+                    foreach (ViewSchedule schedule in _schedulesList)
+                    {
+                        // set the schedule to show tile and headers returns de original schedule definition
+                        ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(schedule);
+                        // Get all the categegories that allow AllowsBoundParameters as a set 
+                        CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, schedule);
+                        // Add the "Dev_Text_1" parameter to be used for the UniqueID of the row element during export.
+                        M_Add_Dev_Text_4(app, doc, schedule, _scheduleBuiltInCategory);
+
+                        // create excel sheet based on schedule name and number prefix to avoid duplicates
+                        ExcelWorksheet worksheet = workbook.Worksheets.Add($"{prefix}_{schedule.Name}");
+                        // load current schedule to its own excel sheet
+                        ExportViewScheduleBasic(schedule, worksheet);
+                        prefix++;
+                    }
+                    t.RollBack();
                 }
                 excelFile.Save();
                 excelFile.Dispose();
+                Process.Start(_excelFilePath);
                 return Result.Succeeded;
             }
             #endregion

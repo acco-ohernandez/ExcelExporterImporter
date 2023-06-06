@@ -1432,11 +1432,10 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
         // End Testing ======
 
-
         public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet)
         {
             var dt = new DataTable();
-            //Definition of columns
+            // Definition of columns
             var fieldsCount = schedule.Definition.GetFieldCount();
             for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
             {
@@ -1445,6 +1444,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                 var fieldType = typeof(string);
                 var columnName = field.ColumnHeading;
                 var i = 1;
+                // Ensure column names are unique by appending a number if necessary
                 while (dt.Columns.Contains(columnName))
                 {
                     columnName = $"{field.GetName()}({i})";
@@ -1454,32 +1454,76 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                 dt.Columns.Add(columnName, fieldType);
             }
 
-            //Content display
+            // Content display
             var viewSchedule = schedule;
             var table = viewSchedule.GetTableData();
             var section = table.GetSectionData(SectionType.Body);
             var nRows = section.NumberOfRows;
             var nColumns = section.NumberOfColumns;
             if (nRows > 1)
-                //Starts at 1 so as not to display the header
+            {
+                // Starts at 1 to skip the header row
                 for (var i = 1; i < nRows; i++)
                 {
                     var data = dt.NewRow();
                     for (var j = 0; j < nColumns; j++)
                     {
-                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
-                        if (val.ToString() != "") data[j] = val;
+                        if (i == 1)
+                        {
+                            try
+                            {
+                                // Retrieve the parameter name for the current column index
+                                var field = viewSchedule.Definition.GetField(j);
+                                object val = field.GetName();
+                                if (val.ToString() != "") data[j] = val;
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print($"Error retrieving parameter name at column index {j}: {ex.Message}");
+                                // Handle the exception or log the error as needed
+                            }
+                        }
+                        else
+                        {
+                            // Retrieve the cell value for non-header rows
+                            object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                            if (val.ToString() != "") data[j] = val;
+                        }
                     }
 
                     dt.Rows.Add(data);
                 }
+            }
 
+
+            ////Content display
+            //var viewSchedule = schedule;
+            //var table = viewSchedule.GetTableData();
+            //var section = table.GetSectionData(SectionType.Body);
+            //var nRows = section.NumberOfRows;
+            //var nColumns = section.NumberOfColumns;
+            //if (nRows > 1)
+            //    //Starts at 1 so as not to display the header
+            //    for (var i = 1; i < nRows; i++)
+            //    {
+            //        var data = dt.NewRow();
+            //        for (var j = 0; j < nColumns; j++)
+            //        {
+            //            object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+            //            if (val.ToString() != "") data[j] = val;
+            //        }
+
+            //        dt.Rows.Add(data);
+            //    }
             if (dt.Rows.Count > 0)
             {
+                // Load the data into the worksheet
                 worksheet.Cells.LoadFromDataTable(dt, true);
-                //RevitUtilities.AutoFitAllCol(worksheet);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
             }
         }
+
+
 
         public static ExcelPackage Create_ExcelFile(string filePath)
         {
