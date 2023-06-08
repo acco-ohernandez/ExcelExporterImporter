@@ -1384,7 +1384,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             {
                 // The file is locked, prompt the user to close Excel before continuing
                 M_MyTaskDialog("Warning:", $"The CSV file below is currently locked by Excel: " +
-                                           $"\n{fileName} " +
+                                           $"\n{fileName}\n{ex} " +
                                            $"\n\nPlease close Excel, \nthen click CLOSE to continue!");
                 //return;
             }
@@ -1431,8 +1431,830 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
 
         // End Testing ======
+        public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet) // bookmark CTRL + K K  . next K N
+        {
+            string scheduleUniqueId = schedule.UniqueId;
+            var dt = CreateDataTable(schedule);
 
-        public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet)
+            if (dt.Rows.Count > 0)
+            {
+                var dtRearranged = RearrangeColumns(dt);
+                dtRearranged = InsertUniqueId(dtRearranged, scheduleUniqueId);
+
+                worksheet.Cells.LoadFromDataTable(dtRearranged, true);
+                WorksheetFormatting(worksheet);
+            }
+        }
+
+        private void AutoFitColumns(ExcelWorksheet worksheet, int rowIndexToFitTo)
+        {
+            for (int columnIndex = 1; columnIndex <= worksheet.Dimension.Columns; columnIndex++)
+            {
+                var cellValue = worksheet.Cells[rowIndexToFitTo, columnIndex].Value;
+                if (cellValue != null)
+                {
+                    var cellTextLength = cellValue.ToString().Length;
+                    var column = worksheet.Column(columnIndex);
+                    column.Width = cellTextLength + 2; // Adjust the value as needed
+                }
+            }
+        }
+        public DataTable CreateDataTable(ViewSchedule schedule)
+        {
+            var dt = new DataTable();
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var columnName = field.GetName(); // Parameter names
+                var fieldType = typeof(string);
+
+                // Ensure column names are unique by appending a number if necessary
+                var i = 1;
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the column headings
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewSchedule.Definition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Populate data rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var dataRow = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "")
+                            dataRow[j] = val;
+                    }
+                    dt.Rows.Add(dataRow);
+                }
+            }
+
+            return dt;
+        }
+        public DataTable RearrangeColumns(DataTable dt)
+        {
+            var lastColumnIndex = dt.Columns.Count - 1;
+            var lastColumn = dt.Columns[lastColumnIndex];
+
+            // Create a new DataTable with the columns rearranged
+            var dtRearranged = new DataTable();
+            dtRearranged.Columns.Add(lastColumn.ColumnName, lastColumn.DataType);
+            foreach (DataColumn column in dt.Columns)
+            {
+                if (column != lastColumn)
+                    dtRearranged.Columns.Add(column.ColumnName, column.DataType);
+            }
+
+            // Copy the data rows with the columns rearranged
+            foreach (DataRow row in dt.Rows)
+            {
+                var newRow = dtRearranged.NewRow();
+                newRow[0] = row[lastColumnIndex];
+                for (var i = 0; i < lastColumnIndex; i++)
+                    newRow[i + 1] = row[i];
+                dtRearranged.Rows.Add(newRow);
+            }
+
+            return dtRearranged;
+        }
+        public DataTable InsertUniqueId(DataTable dt, string scheduleUniqueId)
+        {
+            var newRowAtIndex0 = dt.NewRow();
+            newRowAtIndex0[0] = scheduleUniqueId;
+            dt.Rows.InsertAt(newRowAtIndex0, 0);
+
+            return dt;
+        }
+        #region Excel Formatting methods
+        public void WorksheetFormatting(ExcelWorksheet worksheet)
+        {
+            FormatRow3Style(worksheet);
+            AutoFitColumns(worksheet, 3);
+            HideFirstTwoRows(worksheet);
+            HideFirstColumn(worksheet);
+            FreezeFirstThreeRows(worksheet);
+        }
+        public void HideFirstTwoRows(ExcelWorksheet worksheet)
+        {
+            // Hide the first two rows
+            worksheet.Row(1).Hidden = true;
+            worksheet.Row(2).Hidden = true;
+        }
+        public void HideFirstColumn(ExcelWorksheet worksheet)
+        {
+            // Hide the first column
+            worksheet.Column(1).Hidden = true;
+        }
+        public void FreezeFirstThreeRows(ExcelWorksheet worksheet)
+        {
+            // Freeze the first three rows
+            worksheet.View.FreezePanes(4, 1);
+        }
+        public void FormatRow3Style(ExcelWorksheet worksheet)
+        {
+            var lastColumnIndex = worksheet.Dimension.End.Column;
+
+            // Apply bold font to the row
+            worksheet.Cells[3, 1, 3, lastColumnIndex].Style.Font.Bold = true;
+
+            // Set the background color to light gray for cells with content
+            for (int columnIndex = 1; columnIndex <= lastColumnIndex; columnIndex++)
+            {
+                var cell = worksheet.Cells[3, columnIndex];
+                if (cell.Value != null)
+                {
+                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                }
+            }
+        }
+        #endregion
+
+
+
+
+
+
+
+
+        public void ExportViewScheduleBasic9(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            string scheduleUniqueId = schedule.UniqueId;
+            var dt = new DataTable();
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var columnName = field.GetName();
+                var fieldType = typeof(string);
+
+                // Ensure column names are unique by appending a number if necessary
+                var i = 1;
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the column headings
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewSchedule.Definition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Populate data rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var dataRow = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "")
+                            dataRow[j] = val;
+                    }
+                    dt.Rows.Add(dataRow);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Rearrange columns: Move last column to the first column
+                var lastColumnIndex = dt.Columns.Count - 1;
+                var lastColumn = dt.Columns[lastColumnIndex];
+
+                // Create a new DataTable with the columns rearranged
+                var dtRearranged = new DataTable();
+                dtRearranged.Columns.Add(lastColumn.ColumnName, lastColumn.DataType);
+                foreach (DataColumn column in dt.Columns)
+                {
+                    if (column != lastColumn)
+                        dtRearranged.Columns.Add(column.ColumnName, column.DataType);
+                }
+
+                // Copy the data rows with the columns rearranged
+                foreach (DataRow row in dt.Rows)
+                {
+                    var newRow = dtRearranged.NewRow();
+                    newRow[0] = row[lastColumnIndex];
+                    for (var i = 0; i < lastColumnIndex; i++)
+                        newRow[i + 1] = row[i];
+                    dtRearranged.Rows.Add(newRow);
+                }
+
+                // Insert a new row at index 0 and add scheduleUniqueId to column index 0
+                var newRowAtIndex0 = dtRearranged.NewRow();
+                newRowAtIndex0[0] = scheduleUniqueId;
+                dtRearranged.Rows.InsertAt(newRowAtIndex0, 0);
+
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dtRearranged, true);
+
+                //worksheet.Cells.AutoFitColumns();
+                // Auto-fit columns to the third row text
+                int rowIndexToFitTo = 3;
+                M_AutoFitColumns(worksheet, rowIndexToFitTo);
+            }
+        }
+        public void M_AutoFitColumns(ExcelWorksheet worksheet, int rowIndex)
+        {
+            for (int columnIndex = 1; columnIndex <= worksheet.Dimension.Columns; columnIndex++)
+            {
+                var cellValue = worksheet.Cells[rowIndex, columnIndex].Value;
+
+                if (cellValue != null)
+                {
+                    var cellTextLength = cellValue.ToString().Length;
+                    var column = worksheet.Column(columnIndex);
+                    column.Width = cellTextLength + 2; // Adjust the value as needed
+                }
+            }
+        }
+
+        public void ExportViewScheduleBasic8(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            string scheduleUniqueId = schedule.UniqueId;
+            var dt = new DataTable();
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var columnName = field.GetName();
+                var fieldType = typeof(string);
+
+                // Ensure column names are unique by appending a number if necessary
+                var i = 1;
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the column headings
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewSchedule.Definition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Populate data rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var dataRow = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "")
+                            dataRow[j] = val;
+                    }
+                    dt.Rows.Add(dataRow);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Rearrange columns: Move last column to the first column
+                var lastColumnIndex = dt.Columns.Count - 1;
+                var lastColumn = dt.Columns[lastColumnIndex];
+
+                // Create a new DataTable with the columns rearranged
+                var dtRearranged = new DataTable();
+                dtRearranged.Columns.Add(lastColumn.ColumnName, lastColumn.DataType);
+                foreach (DataColumn column in dt.Columns)
+                {
+                    if (column != lastColumn)
+                        dtRearranged.Columns.Add(column.ColumnName, column.DataType);
+                }
+
+                // Copy the data rows with the columns rearranged
+                foreach (DataRow row in dt.Rows)
+                {
+                    var newRow = dtRearranged.NewRow();
+                    newRow[0] = row[lastColumnIndex];
+                    for (var i = 0; i < lastColumnIndex; i++)
+                        newRow[i + 1] = row[i];
+                    dtRearranged.Rows.Add(newRow);
+                }
+
+                // Insert a new row at index 0 and add scheduleUniqueId to column index 0
+                var newRowAtIndex0 = dtRearranged.NewRow();
+                newRowAtIndex0[0] = scheduleUniqueId;
+                dtRearranged.Rows.InsertAt(newRowAtIndex0, 0);
+
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dtRearranged, true);
+                // RevitUtilities.AutoFitAllCol(worksheet);
+            }
+        }
+
+        public void ExportViewScheduleBasic7(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            string scheduleUniqueId = schedule.UniqueId;
+            var dt = new DataTable();
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var columnName = field.GetName();
+                var fieldType = typeof(string);
+
+                // Ensure column names are unique by appending a number if necessary
+                var i = 1;
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the column headings
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewSchedule.Definition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Populate data rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var dataRow = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "")
+                            dataRow[j] = val;
+                    }
+                    dt.Rows.Add(dataRow);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Rearrange columns: Move last column to the first column
+                var lastColumnIndex = dt.Columns.Count - 1;
+                var lastColumn = dt.Columns[lastColumnIndex];
+
+                // Create a new DataTable with the columns rearranged
+                var dtRearranged = new DataTable();
+                dtRearranged.Columns.Add(lastColumn.ColumnName, lastColumn.DataType);
+                foreach (DataColumn column in dt.Columns)
+                {
+                    if (column != lastColumn)
+                        dtRearranged.Columns.Add(column.ColumnName, column.DataType);
+                }
+
+                // Copy the data rows with the columns rearranged
+                foreach (DataRow row in dt.Rows)
+                {
+                    var newRow = dtRearranged.NewRow();
+                    newRow[0] = row[lastColumnIndex];
+                    for (var i = 0; i < lastColumnIndex; i++)
+                        newRow[i + 1] = row[i];
+                    dtRearranged.Rows.Add(newRow);
+                }
+
+                // ChatGPT: insert a new row at index 0 and add the scheduleUniqueId to column index 0
+
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dtRearranged, true);
+                // RevitUtilities.AutoFitAllCol(worksheet);
+            }
+        }
+
+
+
+
+        public void ExportViewScheduleBasic6(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            string scheduleUniqueId = schedule.UniqueId;
+
+            var dt = new DataTable();
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var columnName = field.GetName(); // Use the field name as the columnName
+                var fieldType = typeof(string);
+                var i = 1;
+                // Ensure column names are unique by appending a number if necessary
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the column headings
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewSchedule.Definition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Populate data rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var dataRow = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") dataRow[j] = val;
+                    }
+                    dt.Rows.Add(dataRow);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+            }
+        }
+
+        public void ExportViewScheduleBasic5(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            var dt = new DataTable();
+            var emptyRow = dt.NewRow();
+            dt.Rows.InsertAt(emptyRow, 0); // Insert an empty row at index 0
+
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var fieldType = typeof(string);
+                var columnName = field.GetName(); // Use the field name as the columnName
+                var i = 1;
+                // Ensure column names are unique by appending a number if necessary
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var viewScheduleDefinition = viewSchedule.Definition;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the field names from the definition
+                //var fieldRow = dt.NewRow();
+                //for (var j = 0; j < nColumns; j++)
+                //{
+                //    var field = viewScheduleDefinition.GetField(j);
+                //    fieldRow[j] = field.GetName();
+                //}
+                //dt.Rows.Add(fieldRow);
+
+                // Set the values of the second row to the column names
+
+                var columnNameRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewScheduleDefinition.GetField(j);
+                    columnNameRow[j] = field.ColumnHeading;
+                }
+                dt.Rows.Add(columnNameRow);
+
+                // Starts at 2 to skip the header rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var data = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                    }
+                    dt.Rows.Add(data);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+            }
+        }
+
+
+
+
+        public void ExportViewScheduleBasic4(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            var dt = new DataTable();
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var fieldType = typeof(string);
+                var columnName = field.ColumnHeading; // Use the field name as the columnName
+                var i = 1;
+                // Ensure column names are unique by appending a number if necessary
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.ColumnHeading}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var viewScheduleDefinition = viewSchedule.Definition;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the field names from the definition
+                var fieldRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var field = viewScheduleDefinition.GetField(j);
+                    fieldRow[j] = field.GetName();
+                }
+                dt.Rows.Add(fieldRow);
+
+                // Set the values of the second row to the values from the first row of the schedule
+                var firstDataRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var value = viewSchedule.GetCellText(SectionType.Body, 1, j);
+                    firstDataRow[j] = value.ToString();
+                }
+                dt.Rows.Add(firstDataRow);
+
+                // Starts at 2 to skip the first two rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var data = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                    }
+                    dt.Rows.Add(data);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+            }
+        }
+
+        public void ExportViewScheduleBasic3(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            var dt = new DataTable();
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var fieldType = typeof(string);
+                var columnName = field.GetName(); // Use the parameter name as the columnName
+                var i = 1;
+                // Ensure column names are unique by appending a number if necessary
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var viewScheduleDefinition = viewSchedule.Definition;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+            if (nRows > 1)
+            {
+                // Set the values of the first row to the current parameter values
+                var parameterRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    var parameter = viewSchedule.GetCellText(SectionType.Body, 1, j);
+                    parameterRow[j] = parameter.ToString();
+                }
+                dt.Rows.Add(parameterRow);
+
+                // Set the values of the second row to the current column names
+                var headerRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    headerRow[j] = dt.Columns[j].ColumnName;
+                }
+                dt.Rows.Add(headerRow);
+
+                // Starts at 2 to skip the header rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var data = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                    }
+                    dt.Rows.Add(data);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+            }
+        }
+
+        public void ExportViewScheduleBasic2(ViewSchedule schedule, ExcelWorksheet worksheet)
+        {
+            var dt = new DataTable();
+            // Definition of columns
+            var fieldsCount = schedule.Definition.GetFieldCount();
+            for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+            {
+                var field = schedule.Definition.GetField(fieldIndex);
+                if (field.IsHidden) continue;
+                var fieldType = typeof(string);
+                var columnName = field.GetName(); // Use the parameter name as the columnName
+                var i = 1;
+                // Ensure column names are unique by appending a number if necessary
+                while (dt.Columns.Contains(columnName))
+                {
+                    columnName = $"{field.GetName()}({i})";
+                    i++;
+                }
+
+                dt.Columns.Add(columnName, fieldType);
+            }
+
+            // Content display
+            var viewSchedule = schedule;
+            var viewScheduleDefinition = viewSchedule.Definition;
+            var table = viewSchedule.GetTableData();
+            var section = table.GetSectionData(SectionType.Body);
+            var nRows = section.NumberOfRows;
+            var nColumns = section.NumberOfColumns;
+            if (nRows > 1)
+            {
+                // Insert a new row before the current row 1
+                var newRow = dt.NewRow();
+                dt.Rows.InsertAt(newRow, 0);
+
+                // Set the values of the second row to the current column names
+                var headerRow = dt.NewRow();
+                for (var j = 0; j < nColumns; j++)
+                {
+                    headerRow[j] = dt.Columns[j].ColumnName;
+                }
+                dt.Rows.InsertAt(headerRow, 1);
+
+                // Starts at 2 to skip the header rows
+                for (var i = 2; i < nRows; i++)
+                {
+                    var data = dt.NewRow();
+                    for (var j = 0; j < nColumns; j++)
+                    {
+                        // Retrieve the cell value for each column
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                    }
+                    dt.Rows.Add(data);
+                }
+            }
+
+            if (dt.Rows.Count > 0)
+            {
+                // Load the data into the worksheet
+                worksheet.Cells.LoadFromDataTable(dt, true);
+                // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+            }
+        }
+
+
+        public void ExportViewScheduleBasic_Old(ViewSchedule schedule, ExcelWorksheet worksheet)
         {
             var dt = new DataTable();
             // Definition of columns
@@ -1456,6 +2278,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
             // Content display
             var viewSchedule = schedule;
+            var viewScheduleDefinition = viewSchedule.Definition; //<-- Added
             var table = viewSchedule.GetTableData();
             var section = table.GetSectionData(SectionType.Body);
             var nRows = section.NumberOfRows;
@@ -1468,53 +2291,43 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                     var data = dt.NewRow();
                     for (var j = 0; j < nColumns; j++)
                     {
-                        if (i == 1)
-                        {
-                            try
-                            {
-                                // Retrieve the parameter name for the current column index
-                                var field = viewSchedule.Definition.GetField(j);
-                                object val = field.GetName();
-                                if (val.ToString() != "") data[j] = val;
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print($"Error retrieving parameter name at column index {j}: {ex.Message}");
-                                // Handle the exception or log the error as needed
-                            }
-                        }
-                        else
-                        {
-                            // Retrieve the cell value for non-header rows
-                            object val = viewSchedule.GetCellText(SectionType.Body, i, j);
-                            if (val.ToString() != "") data[j] = val;
-                        }
-                    }
+                        //if (i == 1)
+                        //{
+                        //    try
+                        //    {
+                        //        // Retrieve the parameter name for the current column index
+                        //        var field = viewScheduleDefinition.GetField(j);
+                        //        if (field.IsHidden)
+                        //            continue;
+                        //        object val = field.GetName();
 
+                        //        //if (field.ColumnHeading == "Dev_Text_1") //<--- Left off here!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        //        //{
+                        //        //    val = "Dev_Text_1";
+                        //        //    if (val.ToString() != "") data[j] = val;
+                        //        //    continue;
+                        //        //}
+
+                        //        if (val.ToString() != "") data[j] = val;
+                        //    }
+                        //    catch (Exception ex)
+                        //    {
+                        //        Debug.Print($"Error retrieving parameter name at column index {j}: {ex.Message}");
+                        //        // Handle the exception or log the error as needed
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    // Retrieve the cell value for non-header rows
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        if (val.ToString() != "") data[j] = val;
+                        //}
+                    }
                     dt.Rows.Add(data);
                 }
             }
 
-
-            ////Content display
-            //var viewSchedule = schedule;
-            //var table = viewSchedule.GetTableData();
-            //var section = table.GetSectionData(SectionType.Body);
-            //var nRows = section.NumberOfRows;
-            //var nColumns = section.NumberOfColumns;
-            //if (nRows > 1)
-            //    //Starts at 1 so as not to display the header
-            //    for (var i = 1; i < nRows; i++)
-            //    {
-            //        var data = dt.NewRow();
-            //        for (var j = 0; j < nColumns; j++)
-            //        {
-            //            object val = viewSchedule.GetCellText(SectionType.Body, i, j);
-            //            if (val.ToString() != "") data[j] = val;
-            //        }
-
-            //        dt.Rows.Add(data);
-            //    }
+            //<--
             if (dt.Rows.Count > 0)
             {
                 // Load the data into the worksheet
@@ -1522,6 +2335,106 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                 // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
             }
         }
+
+        //public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet)
+        //{
+        //    var dt = new DataTable();
+        //    // Definition of columns
+        //    var fieldsCount = schedule.Definition.GetFieldCount();
+        //    for (var fieldIndex = 0; fieldIndex < fieldsCount; fieldIndex++)
+        //    {
+        //        var field = schedule.Definition.GetField(fieldIndex);
+        //        if (field.IsHidden) continue;
+        //        var fieldType = typeof(string);
+        //        var columnName = field.ColumnHeading;
+        //        var i = 1;
+        //        // Ensure column names are unique by appending a number if necessary
+        //        while (dt.Columns.Contains(columnName))
+        //        {
+        //            columnName = $"{field.GetName()}({i})";
+        //            i++;
+        //        }
+
+        //        dt.Columns.Add(columnName, fieldType);
+        //    }
+
+        //    // Content display
+        //    var viewSchedule = schedule;
+        //    var viewScheduleDefinition = viewSchedule.Definition; //<-- Added
+        //    var table = viewSchedule.GetTableData();
+        //    var section = table.GetSectionData(SectionType.Body);
+        //    var nRows = section.NumberOfRows;
+        //    var nColumns = section.NumberOfColumns;
+        //    if (nRows > 1)
+        //    {
+        //        // Starts at 1 to skip the header row
+        //        for (var i = 1; i < nRows; i++)
+        //        {
+        //            var data = dt.NewRow();
+        //            for (var j = 0; j < nColumns; j++)
+        //            {
+        //                //if (i == 1)
+        //                //{
+        //                //    try
+        //                //    {
+        //                //        // Retrieve the parameter name for the current column index
+        //                //        var field = viewScheduleDefinition.GetField(j);
+        //                //        object val = field.GetName();
+
+        //                //        if (field.ColumnHeading == "Dev_Text_1") //<--- Left off here!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //                //        {
+        //                //            val = "Dev_Text_1";
+        //                //            if (val.ToString() != "") data[j] = val;
+        //                //            continue;
+        //                //        }
+
+        //                //        if (val.ToString() != "") data[j] = val;
+        //                //    }
+        //                //    catch (Exception ex)
+        //                //    {
+        //                //        Debug.Print($"Error retrieving parameter name at column index {j}: {ex.Message}");
+        //                //        // Handle the exception or log the error as needed
+        //                //    }
+        //                //}
+        //                //else
+        //                //{
+        //                    //// Retrieve the cell value for non-header rows
+        //                    object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+        //                if (val.ToString() != "") data[j] = val;
+        //            //}
+        //        }
+
+        //            dt.Rows.Add(data);
+        //        }
+        //    }
+
+
+        //    ////Content display
+        //    //var viewSchedule = schedule;
+        //    //var table = viewSchedule.GetTableData();
+        //    //var section = table.GetSectionData(SectionType.Body);
+        //    //var nRows = section.NumberOfRows;
+        //    //var nColumns = section.NumberOfColumns;
+        //    //if (nRows > 1)
+        //    //    //Starts at 1 so as not to display the header
+        //    //    for (var i = 1; i < nRows; i++)
+        //    //    {
+        //    //        var data = dt.NewRow();
+        //    //        for (var j = 0; j < nColumns; j++)
+        //    //        {
+        //    //            object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+        //    //            if (val.ToString() != "") data[j] = val;
+        //    //        }
+
+        //    //        dt.Rows.Add(data);
+        //    //    }
+        //    if (dt.Rows.Count > 0)
+        //    {
+        //        // Load the data into the worksheet
+        //        worksheet.Cells.LoadFromDataTable(dt, true);
+        //        // RevitUtilities.AutoFitAllCol(worksheet); - Uncomment or implement the AutoFitAllCol method if needed
+        //    }
+        //}
 
 
 
@@ -1532,9 +2445,9 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
             // Open Excel file using EPPlus library
             ExcelPackage excelFile = new ExcelPackage(filePath);  // Create an instance of ExcelPackage by providing the file path
-            //ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
-            // ExcelWorksheet worksheet = workbook.Worksheets[1];  // Get the first worksheet (index 0) from the workbook
-            //ExcelWorksheet worksheet = workbook.Worksheets.Add("Sheet1");
+                                                                  //ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
+                                                                  // ExcelWorksheet worksheet = workbook.Worksheets[1];  // Get the first worksheet (index 0) from the workbook
+                                                                  //ExcelWorksheet worksheet = workbook.Worksheets.Add("Sheet1");
 
             return excelFile;
         }

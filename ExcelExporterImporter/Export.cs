@@ -48,7 +48,7 @@ namespace ORH_ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= Get All Schedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
 
             // ================= Get Specific Schedule =================
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
@@ -57,6 +57,7 @@ namespace ORH_ExcelExporterImporter
             //var schedule = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule; // Get specific Schedule into a list
             //var schedule = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule;
             //var schedules = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Construction Documents") as ViewSchedule;
+            var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
             //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
 
 
@@ -78,7 +79,7 @@ namespace ORH_ExcelExporterImporter
                     foreach (ViewSchedule schedule in _schedulesList)
                     {
                         // set the schedule to show tile and headers returns de original schedule definition
-                        ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(schedule);
+                        //ScheduleDefinition curScheduleDefinition = MyUtils.M_ShowHeadersAndTileOnSchedule(schedule);
                         // Get all the categegories that allow AllowsBoundParameters as a set 
                         CategorySet _scheduleBuiltInCategory = M_GetAllowBoundParamCategorySet(doc, schedule);
                         // Add the "Dev_Text_1" parameter to be used for the UniqueID of the row element during export.
