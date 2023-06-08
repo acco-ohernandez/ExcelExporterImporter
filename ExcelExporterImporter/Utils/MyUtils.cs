@@ -1440,6 +1440,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             {
                 var dtRearranged = RearrangeColumns(dt);
                 dtRearranged = InsertUniqueId(dtRearranged, scheduleUniqueId);
+                //var dtRearranged = InsertUniqueId(dt, scheduleUniqueId);
 
                 worksheet.Cells.LoadFromDataTable(dtRearranged, true);
                 WorksheetFormatting(worksheet);
@@ -1494,21 +1495,30 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             {
                 // Set the values of the first row to the column headings
                 var columnNameRow = dt.NewRow();
+
+                int actualIndex = 0;
                 for (var j = 0; j < nColumns; j++)
                 {
-                    var field = viewSchedule.Definition.GetField(j);
+                    //var field = viewSchedule.Definition.GetField(j);
+                    var field = viewSchedule.Definition.GetField(actualIndex);
+                    actualIndex++;
+                    if (field.IsHidden)
+                    {
+                        j--;
+                        continue;
+                    }
                     columnNameRow[j] = field.ColumnHeading;
                 }
                 dt.Rows.Add(columnNameRow);
 
                 // Populate data rows
-                for (var i = 2; i < nRows; i++)
+                for (var i = 2; i < nRows; i++) // start at row index 2. to skip schedule title and header rows
                 {
                     var dataRow = dt.NewRow();
                     for (var j = 0; j < nColumns; j++)
                     {
                         // Retrieve the cell value for each column
-                        object val = viewSchedule.GetCellText(SectionType.Body, i, j);
+                        object val = viewSchedule.GetCellText(SectionType.Body, i, j); // Gets the displayed schedule data
                         if (val.ToString() != "")
                             dataRow[j] = val;
                     }
