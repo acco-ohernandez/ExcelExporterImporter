@@ -17,15 +17,13 @@ using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 
 using Microsoft.VisualBasic.FileIO;
-
-using OfficeOpenXml;
 #endregion
 
 #region Begining of doc
 namespace ORH_ExcelExporterImporter
 {
     [Transaction(TransactionMode.Manual)]
-    public class Import : MyUtils, IExternalCommand
+    public class Import_OLD2 : MyUtils, IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -50,35 +48,6 @@ namespace ORH_ExcelExporterImporter
             #endregion
             #endregion
 
-            // ===== testing
-            if (true)
-            {
-                string excelFilePath = @"C:\Users\ohernandez\Desktop\Revit_Exports\rme_advanced_sample_project_2020.xlsx";
-                //var excelFile = M_ReadExcelFile(excelFilePath);
-                // Set EPPlus license context
-                ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
-
-                using (var excelPackage = new ExcelPackage(new FileInfo(excelFilePath)))
-                {
-                    var excelFile = M_ReadExcelFile(excelPackage);
-                    if (excelFile == null) { return Result.Cancelled; }
-
-                    var excelSheetData = GetScheduleDataFromSheet(excelFile[6]);
-
-
-                    using (Transaction trans = new Transaction(doc, "Import Schedules"))
-                    {
-                        trans.Start();
-
-                        ImportSchedules(doc, excelSheetData);
-
-                        trans.Commit();
-                    }
-                }
-                //if (excelFile == null) { return Result.Cancelled; }
-                //var excelSheetData = GetScheduleDataFromSheet(excelFile[0]);
-                return Result.Succeeded;
-            }
 
             // ================= Import CSVs =================
             string[] csvFilePaths = GetCsvFilePath(); // Get CSV file paths

@@ -32,6 +32,7 @@ namespace ORH_ExcelExporterImporter
     [Transaction(TransactionMode.Manual)]
     public class MyUtils
     {
+        #region export methods
         //###########################################################################################
 
         public static List<ViewSchedule> _GetSchedulesList(Autodesk.Revit.DB.Document doc) // This method returns a list of all the schedule elements
@@ -2465,6 +2466,221 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
             return excelFile;
         }
+        #endregion
+        //==================================================Importer methods
+        public static List<ExcelWorksheet> M_ReadExcelFile(ExcelPackage excelPackage)
+        {
+            List<ExcelWorksheet> sheets = new List<ExcelWorksheet>();
+
+            // Load the Excel package and retrieve the worksheets
+            ExcelWorkbook workbook = excelPackage.Workbook;
+            foreach (ExcelWorksheet worksheet in workbook.Worksheets)
+            {
+                sheets.Add(worksheet);
+            }
+
+            return sheets;
+        }
+
+        public List<ExcelWorksheet> M_ReadExcelFile_1(string filePath)
+        {
+            // Set EPPlus license context
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
+
+            List<ExcelWorksheet> sheets = new List<ExcelWorksheet>();
+
+            // Check if the file exists
+            if (!File.Exists(filePath))
+            {
+                // Handle file not found error
+                // You can throw an exception or handle it in a way that suits your needs
+                M_MyTaskDialog("Error", $"The Excel file does not exist: {filePath}");
+                return null;
+            }
+
+            // Load the Excel file using EPPlus
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
+                // Loop through each worksheet in the Excel file
+                foreach (var sheet in package.Workbook.Worksheets)
+                {
+                    sheets.Add(sheet);
+                }
+            }
+
+            return sheets;
+        }
+
+        public ScheduleData GetScheduleDataFromSheet(ExcelWorksheet sheet)
+        {
+            ScheduleData scheduleData = new ScheduleData();
+
+            // Retrieve the schedule's unique ID from cell A2
+            string uniqueId = sheet.Cells["A2"].GetValue<string>();
+
+            // Retrieve parameter names starting from cell B1
+            int parameterNameRow = 1;
+            int parameterNameColumn = 2;
+            while (!string.IsNullOrEmpty(sheet.Cells[parameterNameRow, parameterNameColumn].GetValue<string>()))
+            {
+                string parameterName = sheet.Cells[parameterNameRow, parameterNameColumn].GetValue<string>();
+                scheduleData.ParameterNames.Add(parameterName);
+                parameterNameColumn++;
+            }
+
+            // Retrieve scheduled element unique IDs starting from cell A4
+            int uniqueIdRow = 4;
+            while (!string.IsNullOrEmpty(sheet.Cells[uniqueIdRow, 1].GetValue<string>()))
+            {
+                string elementUniqueId = sheet.Cells[uniqueIdRow, 1].GetValue<string>();
+                scheduleData.ElementUniqueIds.Add(elementUniqueId);
+                uniqueIdRow++;
+            }
+
+            // Retrieve parameter values starting from cell B4
+            int parameterValueRow = 4;
+            foreach (string elementUniqueId in scheduleData.ElementUniqueIds)
+            {
+                List<string> parameterValues = new List<string>();
+                for (int column = 2; column <= scheduleData.ParameterNames.Count + 1; column++)
+                {
+                    string parameterValue = sheet.Cells[parameterValueRow, column].GetValue<string>();
+                    parameterValues.Add(parameterValue);
+                }
+                scheduleData.ParameterValues.Add(elementUniqueId, parameterValues);
+                parameterValueRow++;
+            }
+
+            // Set the schedule's unique ID in the scheduleData object
+            scheduleData.UniqueId = uniqueId;
+
+            return scheduleData;
+        }
+        public static void ImportSchedules(Document doc, ScheduleData scheduleData)
+        {
+            // Get the view schedule by unique ID
+            ViewSchedule schedule = M_GetViewScheduleByUniqueId(doc, scheduleData.UniqueId);
+
+            if (schedule == null)
+            {
+                // Schedule not found, handle the error or return
+                return;
+            }
+
+            foreach (string elementUniqueId in scheduleData.ElementUniqueIds)
+            {
+                // Find the element by UniqueId using a suitable method for your case
+                Element element = M_GetElementByUniqueId(doc, schedule, elementUniqueId);
+                if (element == null)
+                {
+                    // If element is not found, print to debug
+                    Debug.Print($"Schedule element UniqueId not found: {elementUniqueId}");
+                    continue;
+                }
+
+                // Set parameter values
+                List<string> parameterValues;
+                if (scheduleData.ParameterValues.TryGetValue(elementUniqueId, out parameterValues))
+                {
+                    ScheduleDefinition scheduleDef = schedule.Definition;
+
+                    for (int i = 0; i < scheduleData.ParameterNames.Count; i++)
+                    {
+                        string parameterName = scheduleData.ParameterNames[i];
+                        Parameter parameter = element.LookupParameter(parameterName);
+                        if (parameter != null && parameter.IsReadOnly == false)
+                        {
+                            string parameterValue = parameterValues[i];
+                            parameter.Set(parameterValue);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static Element M_GetElementByUniqueId(Document doc, ViewSchedule schedule, string elementUniqueId)
+        {
+            FilteredElementCollector collector = new FilteredElementCollector(doc, schedule.Id);
+            ICollection<Element> elements = collector.WhereElementIsNotElementType().ToElements();
+
+            foreach (Element element in elements)
+            {
+                var parameterUniqueId = element.UniqueId;
+                if (parameterUniqueId != null && parameterUniqueId == elementUniqueId)
+                {
+                    return element;
+                }
+            }
+
+            return null;
+        }
+
+        private static Parameter GetParameterByName(Element element, string parameterName)
+        {
+            foreach (Parameter parameter in element.Parameters)
+            {
+                if (parameter.Definition.Name == parameterName)
+                {
+                    return parameter;
+                }
+            }
+            return null;
+        }
+
+        private static Element M_GetElementById(Document doc, string _elementId)
+        {
+            ElementId elementId = new ElementId(int.Parse(_elementId));
+            return doc.GetElement(elementId);
+        }
+
+        private static ScheduleFieldId M_GetScheduleFieldIdByName(ScheduleDefinition scheduleDef, string parameterName)
+        {
+            foreach (ScheduleFieldId fieldId in scheduleDef.GetFieldOrder())
+            {
+                ScheduleField field = scheduleDef.GetField(fieldId);
+                if (field != null && field.GetName() == parameterName)
+                {
+                    return fieldId;
+                }
+            }
+
+            return null;
+        }
+
+        private static ScheduleSheetInstance M_GetScheduleSheetInstanceByUniqueId(Document doc, ViewSchedule schedule, string elementUniqueId)
+        {
+            FilteredElementCollector instances = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_ScheduleGraphics)
+                .OfClass(typeof(ScheduleSheetInstance));
+
+            foreach (ScheduleSheetInstance instance in instances)
+            {
+                if (instance.OwnerViewId == schedule.Id && instance.UniqueId == elementUniqueId)
+                {
+                    return instance;
+                }
+            }
+
+            return null;
+        }
+
+
 
     }
+
+    public class ScheduleData
+    {
+        public string UniqueId { get; set; }
+        public List<string> ParameterNames { get; set; }
+        public List<string> ElementUniqueIds { get; set; }
+        public Dictionary<string, List<string>> ParameterValues { get; set; }
+
+        public ScheduleData()
+        {
+            ParameterNames = new List<string>();
+            ElementUniqueIds = new List<string>();
+            ParameterValues = new Dictionary<string, List<string>>();
+        }
+    }
+
 }
