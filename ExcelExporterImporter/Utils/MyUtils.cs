@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Shapes;
 
 using Autodesk.Revit.ApplicationServices;
@@ -250,7 +251,7 @@ namespace ORH_ExcelExporterImporter
         public static string[] GetCsvFilePath()
         {
             // Create a new OpenFileDialog object.
-            OpenFileDialog dialog = new OpenFileDialog();
+            System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
 
             // Set the dialog's filter to CSV files.
             dialog.Filter = "CSV Files (*.csv)|*.csv";
@@ -2734,6 +2735,23 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
         }
 
 
+        // ========================= Graphical interface methods
+        public static string M_GetExcelFilePath()
+        {
+            using (System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog())
+            {
+                openFileDialog.Filter = "Excel Files|*.xlsx;*.xls";
+                openFileDialog.Multiselect = false;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    return openFileDialog.FileName;
+                }
+            }
+
+            return null;
+        }
 
     }
 

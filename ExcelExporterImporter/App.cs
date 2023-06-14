@@ -33,7 +33,7 @@ namespace ORH_ExcelExporterImporter
             RibbonPanel panel = Utils.CreateRibbonPanel(app, TabName, "Revit Tools");
 
             // 3. Create button data instances
-            ButtonDataClass myButtonData = new ButtonDataClass("btnExcelExporterExport", "Exporter", Export_OLD2.GetMethod(), Properties.Resources.Blue_32, Properties.Resources.Blue_16, "This is a tooltip");
+            ButtonDataClass myButtonData = new ButtonDataClass("btnExcelExporterExport", "Exporter", Export.GetMethod(), Properties.Resources.Blue_32, Properties.Resources.Blue_16, "This is a tooltip");
 
             ButtonDataClass myButtonData2 = new ButtonDataClass("btnExcelExporterImporter", "Importer", Import.GetMethod(), Properties.Resources.Green_32, Properties.Resources.Green_16, "This is a tooltip");
 
