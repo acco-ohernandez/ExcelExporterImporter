@@ -56,7 +56,6 @@ namespace ORH_ExcelExporterImporter
 
 
             //Get the file paths selected by the user:
-            //string excelFilePath = @"C:\Users\ohernandez\Desktop\Revit_Exports\rme_advanced_sample_project_2020.xlsx";
             string excelFilePath = M_GetExcelFilePath();
             if (excelFilePath == null)
             {
@@ -64,9 +63,8 @@ namespace ORH_ExcelExporterImporter
                 return Result.Cancelled; // if no file is selected by the user, cancel the operation
             }
 
+            TaskDialog.Show("t", "t");
 
-
-            //var excelWorksheetList = M_ReadExcelFile(excelFilePath);
             // Set EPPlus license context
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
 

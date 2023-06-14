@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.Creation;
@@ -29,23 +30,37 @@ namespace ORH_ExcelExporterImporter
             Autodesk.Revit.DB.Document doc = uidoc.Document;
 
             #region FormStuff
-            //// open form
-            //MyForm currentForm = new MyForm()
-            //{
-            //    Width = 800,
-            //    Height = 450,
-            //    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
-            //    Topmost = true,
-            //};
+            // open form
+            MyForm currentForm = new MyForm()
+            {
+                Width = 400,
+                Height = 200,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                Topmost = true,
+            };
 
-            //currentForm.ShowDialog();
-
-            // get form data and do something
+            //Get form data and do something
             #endregion
 
             // Create Revit_Exports on desktop if it doesn't exist
             string _FolderName = "Revit_Exports";
             var _path = _CreateFolderOnDesktopByName(_FolderName);
+            string docName = doc.Title; // Name of the revit document
+            string _excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
+
+            bool userCancelled = M_TellTheUserIfFileExistsOrIsOpen(_excelFilePath);
+            if (userCancelled) { return Result.Failed; }
+            //var tdialogresult = TaskDialogNotifyUserFileAlreadyExists(_excelFilePath, "Warning", $"{_excelFilePath}\nThe file already exists. Do you want to overwrite it?");
+            //if (tdialogresult == TaskDialogResult.Yes)
+            //{
+            //    CheckAndPromptToCloseExcel(_excelFilePath, $"The existing file is Openned. \nPlease Close the file before you proceed to close this prompt!"); // Promt the user if the file is open
+            //    File.Delete(_excelFilePath);// If the file exists, delete it.
+            //}
+            //else { return Result.Failed; }
+
+
+
+            M_ShowCurrentFormForNSeconds(currentForm, 5);
 
             // ================= Get All Schedules =================
             var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
@@ -56,9 +71,6 @@ namespace ORH_ExcelExporterImporter
             //var schedule = _schedulesList[7];
 
 
-            string docName = doc.Title;
-            string _excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
-            if (File.Exists(_excelFilePath)) File.Delete(_excelFilePath); // If the file exists, delete it.
 
             ExcelPackage excelFile = Create_ExcelFile(_excelFilePath);
             ExcelWorkbook workbook = excelFile.Workbook;  // Get the workbook from the Excel package
@@ -89,7 +101,6 @@ namespace ORH_ExcelExporterImporter
             return Result.Succeeded;
 
         }
-
 
 
 

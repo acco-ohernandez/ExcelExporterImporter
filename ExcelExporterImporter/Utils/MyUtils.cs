@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -22,6 +23,7 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
+using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Visual;
 using Autodesk.Revit.UI;
 
@@ -1374,7 +1376,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             return curScheduleDefinition;
         }
 
-        public void CheckAndPromptToCloseExcel(string filePath)
+        public static void CheckAndPromptToCloseExcel(string filePath)
         {
             FileStream stream = null;
 
@@ -1402,7 +1404,32 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             // Continue with processing the CSV file
             // ...
         }
+        public void CheckAndPromptToCloseExcel(string filePath, string MessageToShow)
+        {
+            FileStream stream = null;
 
+            string fileName = System.IO.Path.GetFileName(filePath);
+
+            try
+            {
+                Debug.Print($"Checking if file: {fileName} is currently locked by excel");
+                // Attempt to open the CSV file using a FileStream to check for exclusive access
+                stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException ex)
+            {
+                // The file is locked, prompt the user to close Excel before continuing
+                M_MyTaskDialog("Warning:", MessageToShow);
+                //return;
+            }
+            finally
+            {
+                stream?.Dispose();
+            }
+
+            // Continue with processing the CSV file
+            // ...
+        }
 
         // Testing ======
 
@@ -2626,7 +2653,6 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             }
         }
 
-
         public static void ImportSchedules1(Document doc, ScheduleData scheduleData)
         {
             // Get the view schedule by unique ID
@@ -2811,6 +2837,45 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                 }
             }
             return null; // Worksheet not found
+        }
+        public static void M_ShowCurrentFormForNSeconds(MyForm currentForm, int NumOfSeconds)
+        {
+            currentForm.Show();
+            Task.Run(async () =>
+            {
+                await Task.Delay(NumOfSeconds * 1000);
+
+                // Close the form on the UI thread using Dispatcher.Invoke
+                currentForm.Dispatcher.Invoke(() =>
+                {
+                    currentForm.Close();
+                });
+            });
+        }
+
+        public static TaskDialogResult TaskDialogNotifyUserFileAlreadyExists(string excelFilePath, string messageTitle, string textMessage)
+        {
+            if (File.Exists(excelFilePath))
+            {
+                var taskDialog = new TaskDialog(messageTitle);
+                taskDialog.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.Cancel;
+                taskDialog.MainContent = textMessage;
+                var result = taskDialog.Show();
+                return result;
+            }
+            return TaskDialogResult.Yes;
+        }
+
+        public bool M_TellTheUserIfFileExistsOrIsOpen(string _excelFilePath)
+        {
+            var tdialogresult = TaskDialogNotifyUserFileAlreadyExists(_excelFilePath, "Warning", $"{_excelFilePath}\n\nThe file already exists. Do you want to overwrite it?");
+            if (tdialogresult == TaskDialogResult.Yes)
+            {
+                CheckAndPromptToCloseExcel(_excelFilePath, $"The existing file is Openned. \nPlease Close the file before you proceed to close this prompt!"); // Promt the user if the file is open
+                File.Delete(_excelFilePath);// If the file exists, delete it.
+                return false;
+            }
+            else { return true; }
         }
     }
 
