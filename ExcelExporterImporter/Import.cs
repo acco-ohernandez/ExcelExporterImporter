@@ -112,7 +112,7 @@ namespace ORH_ExcelExporterImporter
                             ExcelWorksheet worksheet = M_GetWorksheetByCellA2(selectedSchedule.UniqueId, excelWorksheetList);
                             //var excelSheetData = GetScheduleDataFromSheet(excelWorksheetList[6]);
                             var excelSheetData = GetScheduleDataFromSheet(worksheet);
-                            using (Transaction trans = new Transaction(doc, "Import Schedule"))
+                            using (Transaction trans = new Transaction(doc, $"Import {selectedSchedule.Name}"))
                             {
                                 trans.Start();
                                 ImportSchedules(doc, excelSheetData);
@@ -122,60 +122,6 @@ namespace ORH_ExcelExporterImporter
                     }
                 }
             }
-
-            //using (var excelPackage = new ExcelPackage(new FileInfo(excelFilePath)))
-            //{
-
-            //    List<ExcelWorksheet> excelWorksheetList = M_ReadExcelFile(excelPackage);
-            //    if (excelWorksheetList == null) { return Result.Cancelled; }
-
-            //    // ChatGPT: I Write the following method M_GetScheduleByUniqueIdFromExcelSheet 
-            //    //List<string> ScheduleNamesFoundInCurrentDoc = M_GetScheduleNameByUniqueIdFromExcelSheet(doc, excelWorksheetList);
-            //    List<ViewSchedule> ScheduleNamesFoundInCurrentDoc = M_GetScheduleByUniqueIdFromExcelSheet(doc, excelWorksheetList);
-            //    if (ScheduleNamesFoundInCurrentDoc.Count == 0)
-            //    {
-            //        M_MyTaskDialog("Error", "The Current Revit Document Does not Contain any of the schedules from the Excel file.");
-            //        return Result.Cancelled;
-            //    }
-
-            //    // open form schedules_Form1
-            //    SchedulesImport_Form schedulesImport_Form1 = new SchedulesImport_Form()
-            //    {
-            //        Width = 1000,
-            //        Height = 800,
-            //        WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
-            //        Topmost = true,
-            //    };
-            //    //schedulesImport_Form1.dataGrid.ItemsSource = ScheduleNamesFoundInCurrentDoc;//excelFilePaths.ToList();
-            //    //List<string> scheduleNames = ScheduleNamesFoundInCurrentDoc.Select(schedule => schedule.Name).ToList();
-            //    schedulesImport_Form1.dataGrid.ItemsSource = ScheduleNamesFoundInCurrentDoc.Select(schedule => schedule.Name).ToList();//excelFilePaths.ToList();
-
-            //    schedulesImport_Form1.ShowDialog();
-
-            //    var selectedScheduleNames = schedulesImport_Form1.dataGrid.SelectedCells;
-            //    foreach (var scheduleName in selectedScheduleNames)
-            //    {
-            //        var sch = ScheduleNamesFoundInCurrentDoc.Where(schedule => schedule.Name);
-            //        //}
-
-            //        //if (true) { return Result.Cancelled; }
-
-
-
-
-            //        var excelSheetData = GetScheduleDataFromSheet(excelWorksheetList[6]);
-
-
-            //        using (Transaction trans = new Transaction(doc, "Import Schedules"))
-            //        {
-            //            trans.Start();
-
-            //            ImportSchedules(doc, excelSheetData);
-
-            //            trans.Commit();
-            //        }
-            //    }
-            //}
 
             return Result.Succeeded;
         }

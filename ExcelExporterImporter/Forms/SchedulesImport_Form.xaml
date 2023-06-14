@@ -22,10 +22,11 @@
                   AutoGenerateColumns="False" 
                   CanUserAddRows="False" 
                   Margin="10,10,10,62" 
+                  IsReadOnly="True"
         >
                 <DataGrid.Columns>
                 <!--<DataGridCheckBoxColumn Header="Check Box Column" Binding="{Binding IsChecked}" IsReadOnly="False" />-->
-                <DataGridTextColumn Header="File Path" Binding="{Binding}" />
+                <DataGridTextColumn Header="Schedule Matches Found" Binding="{Binding}" />
                 </DataGrid.Columns>
 
         </DataGrid>
