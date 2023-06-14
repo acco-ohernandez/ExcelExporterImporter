@@ -14,8 +14,9 @@
             <RowDefinition Height="40"/>
 
         </Grid.RowDefinitions>
-        
+
         <Label Grid.Row="0" Content="Schedules Import" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="48" FontWeight="Bold"/>
+        <Label Grid.Row="1" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"/>
 
         <DataGrid x:Name="dataGrid" 
                   Grid.Row="2"

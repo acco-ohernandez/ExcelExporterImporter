@@ -1440,12 +1440,13 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
         public void ExportViewScheduleBasic(ViewSchedule schedule, ExcelWorksheet worksheet) // bookmark CTRL + K K  . next K N
         {
             string scheduleUniqueId = schedule.UniqueId;
+            string scheduleName = schedule.Name;
             var dt = CreateDataTable(schedule);
 
             if (dt.Rows.Count > 0)
             {
                 var dtRearranged = RearrangeColumns(dt);
-                dtRearranged = InsertUniqueId(dtRearranged, scheduleUniqueId);
+                dtRearranged = InsertUniqueId(dtRearranged, scheduleUniqueId, scheduleName);
                 //var dtRearranged = InsertUniqueId(dt, scheduleUniqueId);
 
                 worksheet.Cells.LoadFromDataTable(dtRearranged, true);
@@ -1564,10 +1565,11 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
             return dtRearranged;
         }
-        public DataTable InsertUniqueId(DataTable dt, string scheduleUniqueId)
+        public DataTable InsertUniqueId(DataTable dt, string scheduleUniqueId, string scheduleName)
         {
             var newRowAtIndex0 = dt.NewRow();
             newRowAtIndex0[0] = scheduleUniqueId;
+            newRowAtIndex0[1] = scheduleName;
             dt.Rows.InsertAt(newRowAtIndex0, 0);
 
             return dt;
