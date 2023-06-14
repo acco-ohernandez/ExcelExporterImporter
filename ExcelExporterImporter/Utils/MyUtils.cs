@@ -2586,12 +2586,81 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
                     for (int i = 0; i < scheduleData.ParameterNames.Count; i++)
                     {
-                        string parameterName = scheduleData.ParameterNames[i];
-                        Parameter parameter = element.LookupParameter(parameterName);
-                        if (parameter != null && parameter.IsReadOnly == false)
+                        string parameterName = scheduleData.ParameterNames[i];    // Parameter name from excel sheet
+                        Parameter parameter = element.LookupParameter(parameterName); // Find the parameter in the current schedule
+                        if (parameter != null && parameter.IsReadOnly == false && parameter.StorageType == StorageType.String)
                         {
                             string parameterValue = parameterValues[i];
                             parameter.Set(parameterValue);
+                        }
+                        else // This else statement can be commented out if no logging is disired.
+                        {
+                            // Create a log file with the current document name and time in the user's temp folder
+                            string logFileName = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{doc.Title}_ImportLog.txt");
+
+                            // Get the current timestamp
+                            string timeStamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                            // Write the schedule name, the name of the parameter, the reason why the parameter did not get set, and the timestamp
+                            string logEntry = $"{timeStamp}: Schedule: {schedule.Name}, Parameter: {parameterName}, Reason: ";
+
+                            if (parameter == null)
+                                logEntry += "Parameter not found";
+                            else if (parameter.IsReadOnly)
+                                logEntry += "Parameter is read-only";
+                            else if (parameter.StorageType != StorageType.String)
+                                logEntry += "Parameter is not of string type";
+
+                            // Append the log entry to the log file
+                            File.AppendAllText(logFileName, logEntry + Environment.NewLine);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        public static void ImportSchedules1(Document doc, ScheduleData scheduleData)
+        {
+            // Get the view schedule by unique ID
+            ViewSchedule schedule = M_GetViewScheduleByUniqueId(doc, scheduleData.UniqueId);
+
+            if (schedule == null)
+            {
+                // Schedule not found, handle the error or return
+                return;
+            }
+
+            foreach (string elementUniqueId in scheduleData.ElementUniqueIds)
+            {
+                // Find the element by UniqueId using a suitable method for your case
+                Element element = M_GetElementByUniqueId(doc, schedule, elementUniqueId);
+                if (element == null)
+                {
+                    // If element is not found, print to debug
+                    Debug.Print($"Schedule element UniqueId not found: {elementUniqueId}");
+                    continue;
+                }
+
+                // Set parameter values
+                List<string> parameterValues;
+                if (scheduleData.ParameterValues.TryGetValue(elementUniqueId, out parameterValues))
+                {
+                    ScheduleDefinition scheduleDef = schedule.Definition;
+
+                    for (int i = 0; i < scheduleData.ParameterNames.Count; i++)
+                    {
+                        string parameterName = scheduleData.ParameterNames[i];    // Parameter name from excel sheet
+                        Parameter parameter = element.LookupParameter(parameterName); // Find the parameter in the current schedule
+                        if (parameter != null && parameter.IsReadOnly == false && parameter.StorageType == StorageType.String)
+                        {
+                            string parameterValue = parameterValues[i];
+                            parameter.Set(parameterValue);
+                        }
+                        else
+                        {
+                            // Chat GPT. Add a method that creates a log file with the current document name and time in the user's tempfolder 
+                            // write the schedule name, the name of the parameter and reason why the parameter did not get set
                         }
                     }
                 }
