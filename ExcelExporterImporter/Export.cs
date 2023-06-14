@@ -15,6 +15,8 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 
 using OfficeOpenXml;
+
+using ORH_ExcelExporterImporter.Forms;
 #endregion
 
 namespace ORH_ExcelExporterImporter
@@ -48,27 +50,46 @@ namespace ORH_ExcelExporterImporter
             string docName = doc.Title; // Name of the revit document
             string _excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
 
-            bool userCancelled = M_TellTheUserIfFileExistsOrIsOpen(_excelFilePath);
-            if (userCancelled) { return Result.Failed; }
-            //var tdialogresult = TaskDialogNotifyUserFileAlreadyExists(_excelFilePath, "Warning", $"{_excelFilePath}\nThe file already exists. Do you want to overwrite it?");
-            //if (tdialogresult == TaskDialogResult.Yes)
-            //{
-            //    CheckAndPromptToCloseExcel(_excelFilePath, $"The existing file is Openned. \nPlease Close the file before you proceed to close this prompt!"); // Promt the user if the file is open
-            //    File.Delete(_excelFilePath);// If the file exists, delete it.
-            //}
-            //else { return Result.Failed; }
 
-
-
-            M_ShowCurrentFormForNSeconds(currentForm, 5);
 
             // ================= Get All Schedules =================
             var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
 
-            // ================= Get Specific Schedule =================
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
 
-            //var schedule = _schedulesList[7];
+            // Open schedulesImport_Form1
+            SchedulesImport_Form schedulesImport_Form1 = new SchedulesImport_Form()
+            {
+                Width = 1000,
+                Height = 800,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                Topmost = true,
+            };
+
+            schedulesImport_Form1.dataGrid.ItemsSource = _schedulesList.Select(schedule => schedule.Name).ToList();
+            schedulesImport_Form1.btn_Import.Content = "Export";
+            schedulesImport_Form1.ShowDialog();
+            if (schedulesImport_Form1.DialogResult == true)
+            {
+                var selectedSchedulenames = schedulesImport_Form1.dataGrid.SelectedItems.Cast<string>().ToList();
+                List<ViewSchedule> selectedSchedules = new List<ViewSchedule>();
+                foreach (var scheduleName in selectedSchedulenames)
+                {
+                    // Find the selected schedule by name
+                    selectedSchedules.Add(_schedulesList.FirstOrDefault(sch => sch.Name == scheduleName));
+                }
+                _schedulesList = selectedSchedules;
+            }
+            else
+            {
+                return Result.Cancelled;
+            }
+
+            //if (true) { return Result.Cancelled; }
+            //
+            bool userCancelled = M_TellTheUserIfFileExistsOrIsOpen(_excelFilePath);
+            if (userCancelled) { return Result.Cancelled; }
+
+            M_ShowCurrentFormForNSeconds(currentForm, 5);
 
 
 

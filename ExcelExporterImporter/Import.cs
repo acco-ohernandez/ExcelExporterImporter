@@ -63,7 +63,6 @@ namespace ORH_ExcelExporterImporter
                 return Result.Cancelled; // if no file is selected by the user, cancel the operation
             }
 
-            TaskDialog.Show("t", "t");
 
             // Set EPPlus license context
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
