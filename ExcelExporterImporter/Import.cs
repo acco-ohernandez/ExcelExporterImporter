@@ -112,7 +112,7 @@ namespace ORH_ExcelExporterImporter
                             ExcelWorksheet worksheet = M_GetWorksheetByCellA2(selectedSchedule.UniqueId, excelWorksheetList);
                             //var excelSheetData = GetScheduleDataFromSheet(excelWorksheetList[6]);
                             var excelSheetData = GetScheduleDataFromSheet(worksheet);
-                            using (Transaction trans = new Transaction(doc, $"Import {selectedSchedule.Name}"))
+                            using (Transaction trans = new Transaction(doc, $"Imported: {selectedSchedule.Name}"))
                             {
                                 trans.Start();
                                 ImportSchedules(doc, excelSheetData);
