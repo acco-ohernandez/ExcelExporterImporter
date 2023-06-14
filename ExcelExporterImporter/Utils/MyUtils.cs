@@ -2749,6 +2749,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
                 openFileDialog.Filter = "Excel Files|*.xlsx;*.xls";
                 openFileDialog.Multiselect = false;
                 openFileDialog.RestoreDirectory = true;
+                openFileDialog.Title = "Select Exported Excel file with Schedules";
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
