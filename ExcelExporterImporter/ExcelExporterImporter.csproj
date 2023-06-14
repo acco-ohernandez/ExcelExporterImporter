@@ -87,6 +87,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ORH_ExcelExporterImporter.addin" />
+    <EmbeddedResource Include="Resources\Schedules_Out_32.png" />
+    <EmbeddedResource Include="Resources\Schedules_IN_32.png" />
+    <EmbeddedResource Include="Resources\Schedules_IN_16.png" />
+    <EmbeddedResource Include="Resources\Schedules_Out_16.png" />
     <EmbeddedResource Include="Resources\Yellow_32.png" />
     <EmbeddedResource Include="Resources\Yellow_16.png" />
     <EmbeddedResource Include="Resources\Red_32.png" />

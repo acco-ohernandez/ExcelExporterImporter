@@ -123,6 +123,46 @@ namespace ORH_ExcelExporterImporter.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Schedules_IN_16 {
+            get {
+                object obj = ResourceManager.GetObject("Schedules_IN_16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Schedules_IN_32 {
+            get {
+                object obj = ResourceManager.GetObject("Schedules_IN_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Schedules_Out_16 {
+            get {
+                object obj = ResourceManager.GetObject("Schedules_Out_16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Schedules_Out_32 {
+            get {
+                object obj = ResourceManager.GetObject("Schedules_Out_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Yellow_16 {
             get {
                 object obj = ResourceManager.GetObject("Yellow_16", resourceCulture);
