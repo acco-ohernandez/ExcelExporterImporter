@@ -1614,7 +1614,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
         {
             // Hide the first two rows
             worksheet.Row(1).Hidden = true;
-            worksheet.Row(2).Hidden = true;
+            //worksheet.Row(2).Hidden = true;
         }
         public void HideFirstColumn(ExcelWorksheet worksheet)
         {
