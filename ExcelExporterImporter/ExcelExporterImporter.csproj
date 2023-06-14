@@ -61,9 +61,14 @@
     <Compile Include="App.cs" />
     <Compile Include="Classes\ButtonDataClass.cs" />
     <Compile Include="Archived_Files\Export_OLD2.cs" />
-    <Compile Include="Export _Backup.cs" />
+    <Compile Include="Archived_Files\Export_OLD3.cs" />
+    <Compile Include="Archived_Files\Export _Backup.cs" />
     <Compile Include="Export.cs" />
     <Compile Include="Archived_Files\Import_OLD2.cs" />
+    <Compile Include="Archived_Files\Import_OLD3.cs" />
+    <Compile Include="Forms\SchedulesImport_Form.xaml.cs">
+      <DependentUpon>SchedulesImport_Form.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Import.cs" />
     <Compile Include="Archived_Files\Import_OLD.cs" />
     <Compile Include="Archived_Files\Export_Old.cs" />
@@ -95,6 +100,10 @@
     <Page Include="Forms\MyForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Forms\SchedulesImport_Form.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

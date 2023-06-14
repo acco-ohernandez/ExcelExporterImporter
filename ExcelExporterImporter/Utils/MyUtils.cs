@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -21,12 +22,15 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
+using Autodesk.Revit.DB.Visual;
 using Autodesk.Revit.UI;
 
 using Microsoft.VisualBasic.FileIO;
 using Microsoft.Win32;
 
 using OfficeOpenXml;
+
+using static OfficeOpenXml.ExcelErrorValue;
 
 namespace ORH_ExcelExporterImporter
 {
@@ -2752,7 +2756,59 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
 
             return null;
         }
+        public List<ViewSchedule> M_GetScheduleByUniqueIdFromExcelSheet(Document doc, List<ExcelWorksheet> excelFile)
+        {
+            List<ViewSchedule> schedulesList = new List<ViewSchedule>();
 
+            foreach (ExcelWorksheet sheet in excelFile)
+            {
+                string uniqueId = sheet.Cells["A2"].GetValue<string>();
+                if (!string.IsNullOrEmpty(uniqueId))
+                {
+                    ViewSchedule schedule = M_GetViewScheduleByUniqueId(doc, uniqueId);
+                    if (schedule != null)
+                    {
+                        schedulesList.Add(schedule);
+                    }
+                }
+            }
+
+            return schedulesList;
+        }
+        public List<string> M_GetScheduleNameByUniqueIdFromExcelSheet(Document doc, List<ExcelWorksheet> excelFile)
+        {
+            List<string> schedulesNameList = new List<string>();
+
+            foreach (ExcelWorksheet sheet in excelFile)
+            {
+                string uniqueId = sheet.Cells["A2"].GetValue<string>();
+                if (!string.IsNullOrEmpty(uniqueId))
+                {
+                    ViewSchedule schedule = M_GetViewScheduleByUniqueId(doc, uniqueId);
+                    if (schedule != null)
+                    {
+                        schedulesNameList.Add(schedule.Name);
+                    }
+                }
+            }
+
+            return schedulesNameList;
+        }
+
+        public ExcelWorksheet M_GetWorksheetByCellA2(string uniqueId, List<ExcelWorksheet> worksheets)
+        {
+            //This method iterates through the list of ExcelWorksheet objects and checks the value in cell A2.
+            //If the value matches the provided uniqueId, it returns the corresponding worksheet.If no matching worksheet is found, it returns null.
+            foreach (ExcelWorksheet worksheet in worksheets)
+            {
+                var cellA2Value = worksheet.Cells["A2"].GetValue<string>();
+                if (!string.IsNullOrEmpty(cellA2Value) && cellA2Value == uniqueId)
+                {
+                    return worksheet;
+                }
+            }
+            return null; // Worksheet not found
+        }
     }
 
     public class ScheduleData
