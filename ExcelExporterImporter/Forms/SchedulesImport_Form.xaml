@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ORH_ExcelExporterImporter"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1000">
+             d:DesignHeight="600" d:DesignWidth="500">
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="100"/>
@@ -18,7 +18,7 @@
 
         <Label Grid.Row="0" x:Name="lbl_Title" Content="Schedules Import" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="48" FontWeight="Bold"/>
         <Label Grid.Row="1" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,15,0,0" FontSize="12" FontWeight="Bold"/>
-        <Label Grid.Row="2" Content="( Shift + Click First and Last ) Selects range of Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,0,0,0"  FontSize="12" FontWeight="Bold"/>
+        <Label Grid.Row="2" Content="( Shift + Click First and Last ) Selects range of Schedules" HorizontalAlignment="Left" VerticalAlignment="top" Padding="5,0,0,0"  FontSize="12" FontWeight="Bold"/>
 
         <DataGrid x:Name="dataGrid" 
                   Grid.Row="3"

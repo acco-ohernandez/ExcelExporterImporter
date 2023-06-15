@@ -59,8 +59,8 @@ namespace ORH_ExcelExporterImporter
             // Open schedulesImport_Form1
             SchedulesImport_Form schedulesImport_Form1 = new SchedulesImport_Form()
             {
-                Width = 1000,
-                Height = 800,
+                Width = 500,
+                Height = 600,
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
                 Topmost = true,
             };
