@@ -1406,29 +1406,33 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
         }
         public void CheckAndPromptToCloseExcel(string filePath, string MessageToShow)
         {
-            FileStream stream = null;
-
-            string fileName = System.IO.Path.GetFileName(filePath);
-
-            try
+            if (File.Exists(filePath))
             {
-                Debug.Print($"Checking if file: {fileName} is currently locked by excel");
-                // Attempt to open the CSV file using a FileStream to check for exclusive access
-                stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (IOException ex)
-            {
-                // The file is locked, prompt the user to close Excel before continuing
-                M_MyTaskDialog("Warning:", MessageToShow);
-                //return;
-            }
-            finally
-            {
-                stream?.Dispose();
+                FileStream stream = null;
+
+                string fileName = System.IO.Path.GetFileName(filePath);
+
+                try
+                {
+                    Debug.Print($"Checking if file: {fileName} is currently locked by excel");
+                    // Attempt to open the CSV file using a FileStream to check for exclusive access
+                    stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                }
+                catch (IOException ex)
+                {
+                    // The file is locked, prompt the user to close Excel before continuing
+                    M_MyTaskDialog("Warning:", MessageToShow);
+                    //return;
+                }
+                finally
+                {
+                    stream?.Dispose();
+                }
+
+                // Continue with processing the CSV file
+                // ...
             }
 
-            // Continue with processing the CSV file
-            // ...
         }
 
         // Testing ======
@@ -2871,7 +2875,7 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             var tdialogresult = TaskDialogNotifyUserFileAlreadyExists(_excelFilePath, "Warning", $"{_excelFilePath}\n\nThe file already exists. Do you want to overwrite it?");
             if (tdialogresult == TaskDialogResult.Yes)
             {
-                CheckAndPromptToCloseExcel(_excelFilePath, $"The existing file is Openned. \nPlease Close the file before you proceed to close this prompt!"); // Promt the user if the file is open
+                CheckAndPromptToCloseExcel(_excelFilePath, $"The existing file is opened. \nPlease close the file before you proceed to close this prompt!"); // Promt the user if the file is open
                 File.Delete(_excelFilePath);// If the file exists, delete it.
                 return false;
             }

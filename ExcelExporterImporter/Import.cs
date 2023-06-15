@@ -94,6 +94,12 @@ namespace ORH_ExcelExporterImporter
 
                 schedulesImport_Form1.dataGrid.ItemsSource = ScheduleNamesFoundInCurrentDoc.Select(schedule => schedule.Name).ToList();
 
+                // Update the Content property of lbl_Title
+                schedulesImport_Form1.Dispatcher.Invoke(() =>
+                {
+                    schedulesImport_Form1.lbl_Title.Content = "Schedules Import";
+                });
+
                 schedulesImport_Form1.ShowDialog();
 
                 if (schedulesImport_Form1.DialogResult == true)
