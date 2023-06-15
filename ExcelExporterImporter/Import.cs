@@ -17,6 +17,10 @@ using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 
 using Microsoft.VisualBasic.FileIO;
+
+using OfficeOpenXml;
+
+using ORH_ExcelExporterImporter.Forms;
 #endregion
 
 #region Begining of doc
@@ -31,6 +35,8 @@ namespace ORH_ExcelExporterImporter
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Autodesk.Revit.DB.Document doc = uidoc.Document;
+
+
 
             #region FormStuff
             //// open form
@@ -49,74 +55,79 @@ namespace ORH_ExcelExporterImporter
             #endregion
 
 
-            // ================= Import CSVs =================
-            string[] csvFilePaths = GetCsvFilePath(); // Get CSV file paths
-            if (csvFilePaths == null)
+            //Get the file paths selected by the user:
+            string excelFilePath = M_GetExcelFilePath();
+            if (excelFilePath == null)
             {
-                TaskDialog.Show("INFO", "You didn't select any CSV file");
-                return Result.Cancelled;
-            }//Tell user no file was selected and stop process
+                M_MyTaskDialog("Info", "No file was selected\nOperation Cancelled!");
+                return Result.Cancelled; // if no file is selected by the user, cancel the operation
+            }
 
-            //var _curDocScheduleNames = GetAllScheduleNames(doc); // Get all the schedules names in current doc
-            var _curDocSchedulesUniqueIds = GetAllScheduleUniqueIds(doc); // Get all the schedules names in current doc
 
-            string csvScheduleNamesFound = null;    // Track Found Schedules
-            string csvScheduleNamesNotFound = null; // Track Not Found Schedules
+            // Set EPPlus license context
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;  // Set the license context for EPPlus to NonCommercial
 
-            foreach (var csvFilePath in csvFilePaths)  // Loop Through all the selected CSVs
+            using (var excelPackage = new ExcelPackage(new FileInfo(excelFilePath)))
             {
-                CheckAndPromptToCloseExcel(csvFilePath); // Tell the user to close excel before continueing
-
-                string _viewScheduleUniqueIdFromCSV = null;
-                try
+                List<ExcelWorksheet> excelWorksheetList = M_ReadExcelFile(excelPackage);
+                if (excelWorksheetList == null)
                 {
-                    _viewScheduleUniqueIdFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[0];
-                    if (_viewScheduleUniqueIdFromCSV == null) { return Result.Failed; }
-                }  // Get View schedule name from csv
-                catch (Exception) { return Result.Failed; }
+                    M_MyTaskDialog("Error", "Failed to read Excel file.");
+                    return Result.Cancelled;
+                }
 
-                var _viewScheduleNameFromCSV = M_GetLinesFromCSV(csvFilePath, 1)[1];  // Get View schedule UniqueId from csv
-
-                // Check if the current Schedule UniqueID from the CSV is found in _curDocSchedulesUniqueIds
-                if (_curDocSchedulesUniqueIds.Contains(_viewScheduleUniqueIdFromCSV))
+                List<ViewSchedule> ScheduleNamesFoundInCurrentDoc = M_GetScheduleByUniqueIdFromExcelSheet(doc, excelWorksheetList);
+                if (ScheduleNamesFoundInCurrentDoc.Count == 0)
                 {
-                    Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Found in current document!");
+                    M_MyTaskDialog("Error", "The current Revit document does not contain any of the schedules from the Excel file.");
+                    return Result.Cancelled;
+                }
 
-                    var _headersFromCSV = M_GetLinesFromCSV(csvFilePath, 2);                   // Get Headers from csv
-                    List<string[]> _viewScheduledata = ImportCSVToStringList2(csvFilePath);  // Get data from csv - skips the first 2 lines
-                    csvScheduleNamesFound += $"{_viewScheduleNameFromCSV}\n";               // add found schedule to csvScheduleNamesFound for later report.
+                // Open schedulesImport_Form1
+                SchedulesImport_Form schedulesImport_Form1 = new SchedulesImport_Form()
+                {
+                    Width = 500,
+                    Height = 600,
+                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                    Topmost = true,
+                };
 
+                schedulesImport_Form1.dataGrid.ItemsSource = ScheduleNamesFoundInCurrentDoc.Select(schedule => schedule.Name).ToList();
 
-                    using (Transaction tx = new Transaction(doc, $"Update {_viewScheduleNameFromCSV} Parameters")) // Start a new transaction to make changes to the elements in Revit
+                // Update the Content property of lbl_Title
+                schedulesImport_Form1.Dispatcher.Invoke(() =>
+                {
+                    schedulesImport_Form1.lbl_Title.Content = "Schedules Import";
+                });
+
+                schedulesImport_Form1.ShowDialog();
+
+                if (schedulesImport_Form1.DialogResult == true)
+                {
+                    var selectedScheduleNames = schedulesImport_Form1.dataGrid.SelectedItems;
+                    foreach (var scheduleName in selectedScheduleNames)
                     {
-                        tx.Start(); // Lock the doc while changes are made in the transaction
+                        // Find the selected schedule by name
+                        var selectedSchedule = ScheduleNamesFoundInCurrentDoc.FirstOrDefault(schedule => schedule.Name == scheduleName.ToString());
+                        if (selectedSchedule != null)
+                        {
 
-                        // UPDATE THE SCHEDULES FROM PRIVIOSLY EXPORTED CSV FILES.
-                        // THIS WILL ONLY UPDATE STRING-TYPE FIELDS THAT ARE NOT READONLY.
-                        var _viewScheduleUpdateResult = _UpdateViewSchedule(doc, _viewScheduleUniqueIdFromCSV, _headersFromCSV, _viewScheduledata);
-                        tx.Commit();
+                            ExcelWorksheet worksheet = M_GetWorksheetByCellA2(selectedSchedule.UniqueId, excelWorksheetList);
+                            //var excelSheetData = GetScheduleDataFromSheet(excelWorksheetList[6]);
+                            var excelSheetData = GetScheduleDataFromSheet(worksheet);
+                            using (Transaction trans = new Transaction(doc, $"Imported: {selectedSchedule.Name}"))
+                            {
+                                trans.Start();
+                                ImportSchedules(doc, excelSheetData);
+                                trans.Commit();
+                            }
+                        }
                     }
                 }
-                else
-                {
-                    Debug.Print($"Schedule: {_viewScheduleNameFromCSV} - Not found in current document!");
-                    csvScheduleNamesNotFound += $"{_viewScheduleNameFromCSV}\n"; // add found schedule to csvScheduleNamesNotFound for later report.
-                }
-
-            }
-            if (csvScheduleNamesFound != null)
-            {
-                TaskDialog.Show("INFO", $"Updated the following Schedule(s):\n\n{csvScheduleNamesFound}");
-            }
-            if (csvScheduleNamesNotFound != null)
-            {
-                TaskDialog.Show("INFO", $"Could Not find the following Schedule(s):\n\n{csvScheduleNamesNotFound}");
             }
 
             return Result.Succeeded;
         }
-
-
 
         public static String GetMethod()
         {
