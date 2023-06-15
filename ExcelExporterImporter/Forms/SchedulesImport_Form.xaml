@@ -10,6 +10,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="100"/>
             <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="25"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
@@ -17,15 +18,20 @@
         </Grid.RowDefinitions>
 
         <Label Grid.Row="0" x:Name="lbl_Title" Content="Schedules Import" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="48" FontWeight="Bold"/>
-        <Label Grid.Row="1" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,15,0,0" FontSize="12" FontWeight="Bold"/>
-        <Label Grid.Row="2" Content="( Shift + Click First and Last ) Selects range of Schedules" HorizontalAlignment="Left" VerticalAlignment="top" Padding="5,0,0,0"  FontSize="12" FontWeight="Bold"/>
+
+        <Label Grid.Row="1" Content="Please select which schedule(s) to import" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,15,0,0" FontSize="12" FontWeight="Bold" FontStyle="Italic"/>
+        <Label Grid.Row="2" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,15,0,0" FontSize="12" />
+        <Label Grid.Row="3" Content="( Shift + Click First and Last ) Selects range of Schedules" HorizontalAlignment="Left" VerticalAlignment="top" Padding="5,0,0,0"  FontSize="12" />
 
         <DataGrid x:Name="dataGrid" 
-                  Grid.Row="3"
+                  Grid.Row="4"
                   AutoGenerateColumns="False" 
                   CanUserAddRows="False" 
                   Margin="10,10,10,62" 
                   IsReadOnly="True"
+                  HorizontalAlignment="Stretch"
+                  ColumnWidth="*"
+                  GridLinesVisibility="Horizontal"
         >
                 <DataGrid.Columns>
                 <!--<DataGridCheckBoxColumn Header="Check Box Column" Binding="{Binding IsChecked}" IsReadOnly="False" />-->
@@ -35,7 +41,7 @@
         </DataGrid>
 
 
-        <Button x:Name="btn_Import" Grid.Row="4" Content="Import" Width="150" Height="30" Click="btn_Import_Click"/>
+        <Button x:Name="btn_Import" Grid.Row="5" Content="Import" Width="150" Height="30" Click="btn_Import_Click"/>
 
     </Grid>
 </Window>

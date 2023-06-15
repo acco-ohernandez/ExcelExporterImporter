@@ -43,8 +43,8 @@ namespace ORH_ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= GetAllSchedules =================
-            //var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
-            var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
+            //var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
 
             string _exportedSchedules = "";
             using (Transaction t = new Transaction(doc, "Added param to sched"))

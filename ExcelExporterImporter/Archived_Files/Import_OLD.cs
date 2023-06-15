@@ -69,7 +69,7 @@ namespace ORH_ExcelExporterImporter
             if (false) // <---- Don't for get to change it if you need to.
             {
                 // ================= GetAllSchedules =================
-                var _schedulesList1 = _GetSchedulesList(doc); // Get all the Schedules into a list
+                var _schedulesList1 = M_GetSchedulesList(doc); // Get all the Schedules into a list
                 // Uncommen the option you want to use
                 //==== Option 1 ==== Get schedule by array possition in _schedulesList ;
                 var uid = _schedulesList1[6].UniqueId;
@@ -221,7 +221,7 @@ namespace ORH_ExcelExporterImporter
             return Result.Succeeded;
 
             // ================= GetAllSchedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
             //Get schedule by array possition in _schedulesList;
             var _selectedSchedule = _schedulesList[6];
             Debug.Print($"Selected Schedule Name: {_selectedSchedule.Name}");

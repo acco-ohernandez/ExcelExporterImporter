@@ -41,8 +41,33 @@ namespace ORH_ExcelExporterImporter
     {
         #region export methods
         //###########################################################################################
+        public static List<ViewSchedule> M_GetSchedulesList(Autodesk.Revit.DB.Document doc)
+        {
+            int count = 0;
+            List<ViewSchedule> schedulesList = new List<ViewSchedule>();
+            FilteredElementCollector schedulesCollector = new FilteredElementCollector(doc).OfClass(typeof(ViewSchedule));
 
-        public static List<ViewSchedule> _GetSchedulesList(Autodesk.Revit.DB.Document doc) // This method returns a list of all the schedule elements
+            foreach (ViewSchedule viewSchedule in schedulesCollector)
+            {
+                if (viewSchedule.IsTitleblockRevisionSchedule)
+                    continue;
+
+                schedulesList.Add(doc.GetElement(viewSchedule.Id) as ViewSchedule);
+            }
+
+            // Sort the schedulesList by name
+            schedulesList = schedulesList.OrderBy(schedule => schedule.Name).ToList();
+
+            foreach (Element element in schedulesList)
+            {
+                Debug.Print($"Method: _GetSchedulesList : {count} - {element.Name}");
+                count++;
+            }
+
+            return schedulesList;
+        }
+
+        public static List<ViewSchedule> M_GetSchedulesList1(Autodesk.Revit.DB.Document doc) // This method returns a list of all the schedule elements
         {
             int count = 0;
             List<ViewSchedule> _schedulesList = new List<ViewSchedule>();
@@ -370,7 +395,7 @@ namespace ORH_ExcelExporterImporter
         public static List<string> GetAllScheduleNames(Document doc)
         {
             var _curDocScheduleNames = new List<string>();
-            foreach (var vs in _GetSchedulesList(doc))
+            foreach (var vs in M_GetSchedulesList(doc))
             {
                 _curDocScheduleNames.Add(vs.Name); // Get all the Schedules in the current Document
             }
@@ -379,7 +404,7 @@ namespace ORH_ExcelExporterImporter
         public static List<string> GetAllScheduleUniqueIds(Document doc)
         {
             var _curDocScheduleUniqueIds = new List<string>();
-            foreach (var vs in _GetSchedulesList(doc))
+            foreach (var vs in M_GetSchedulesList(doc))
             {
                 _curDocScheduleUniqueIds.Add($"{vs.UniqueId}"); // Get all the Schedules UniqueIds in the current Document
             }

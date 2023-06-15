@@ -53,7 +53,7 @@ namespace ORH_ExcelExporterImporter
 
 
             // ================= Get All Schedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
 
 
             // Open schedulesImport_Form1
@@ -64,7 +64,9 @@ namespace ORH_ExcelExporterImporter
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
                 Topmost = true,
             };
-
+            // Set AutoGenerateColumns to False before assigning the item source
+            //schedulesImport_Form1.dataGrid.AutoGenerateColumns = false;
+            //schedulesImport_Form1.dataGrid.ColumnWidth = 500;
             schedulesImport_Form1.dataGrid.ItemsSource = _schedulesList.Select(schedule => schedule.Name).ToList();
 
 

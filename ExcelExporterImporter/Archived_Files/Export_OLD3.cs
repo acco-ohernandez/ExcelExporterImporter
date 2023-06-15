@@ -48,17 +48,17 @@ namespace ORH_ExcelExporterImporter
             var _path = _CreateFolderOnDesktopByName(_FolderName);
 
             // ================= Get All Schedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
 
             // ================= Get Specific Schedule =================
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
-            //var schedule = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule; // Get specific Schedule into a list
-            //var schedule = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule;
-            //var schedules = _GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Construction Documents") as ViewSchedule;
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
-            //var _schedulesList = _GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
+            //var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "Mechanical Equipment Schedule"); // Get specific Schedule into a list
+            //var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
+            //var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Construction Documents"); // Get specific Schedule into a list
+            //var schedule = M_GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule; // Get specific Schedule into a list
+            //var schedule = M_GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Coordination") as ViewSchedule;
+            //var schedules = M_GetSchedulesList(doc).FirstOrDefault(x => x.Name == "ACCO Drawing Index - Construction Documents") as ViewSchedule;
+            //var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "ACCO Drawing Index - Coordination"); // Get specific Schedule into a list
+            //var _schedulesList = M_GetSchedulesList(doc).Where(x => x.Name == "VARIABLE VOLUME BOX - DDC HOT WATER REHEAT SCHEDULE"); // Get specific Schedule into a list
 
 
             //var schedule = _schedulesList[7];

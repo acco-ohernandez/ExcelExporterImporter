@@ -48,7 +48,7 @@ namespace ORH_ExcelExporterImporter
             #endregion
 
             // ================= GetAllSchedules =================
-            var _schedulesList = _GetSchedulesList(doc); // Get all the Schedules into a list
+            var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
 
             // Uncommen the option you want to use
             //==== Option 1 ==== Get schedule by array possition in _schedulesList ;
