@@ -9,17 +9,19 @@
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="100"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="25"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
 
         </Grid.RowDefinitions>
 
         <Label Grid.Row="0" x:Name="lbl_Title" Content="Schedules Import" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="48" FontWeight="Bold"/>
-        <Label Grid.Row="1" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"/>
+        <Label Grid.Row="1" Content="( Ctrl + Left Click ) Selects Multiple Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,15,0,0" FontSize="12" FontWeight="Bold"/>
+        <Label Grid.Row="2" Content="( Shift + Click First and Last ) Selects range of Schedules" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="5,0,0,0"  FontSize="12" FontWeight="Bold"/>
 
         <DataGrid x:Name="dataGrid" 
-                  Grid.Row="2"
+                  Grid.Row="3"
                   AutoGenerateColumns="False" 
                   CanUserAddRows="False" 
                   Margin="10,10,10,62" 
