@@ -83,12 +83,13 @@ namespace ORH_ExcelExporterImporter
             {
 
                 var selectedSchedulenames = schedulesImport_Form1.dataGrid.SelectedItems.Cast<string>().ToList();
+                // If no schedules selected, Cancel the export
                 if (selectedSchedulenames.Count <= 0)
                 {
                     M_MyTaskDialog("Info", "No schedules were selected");
                     return Result.Cancelled;
                 }
-
+                // populate the selectedSchedules list to be exported
                 List<ViewSchedule> selectedSchedules = new List<ViewSchedule>();
                 foreach (var scheduleName in selectedSchedulenames)
                 {
@@ -98,7 +99,7 @@ namespace ORH_ExcelExporterImporter
                 _schedulesList = selectedSchedules;
             }
             else
-            {
+            {   // if the was closed, Cancel the export
                 return Result.Cancelled;
             }
 
