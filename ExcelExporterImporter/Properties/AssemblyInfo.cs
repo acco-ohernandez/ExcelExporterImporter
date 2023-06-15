@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ExcelExporterImporter")]
 [assembly: AssemblyDescription("Revit Add-In Description for ExcelExporterImporter")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("YOUR COMPANY NAME")]
+[assembly: AssemblyCompany("ACCO ENGINEERED SYSTEMS")]
 [assembly: AssemblyProduct("ExcelExporterImporter Revit C# .NET Add-In")]
-[assembly: AssemblyCopyright("Copyright (C) 2023 by YOUR NAME, YOUR COMPANY")]
+[assembly: AssemblyCopyright("Copyright (C) 2023 by Orlando R Hernandez, ACCO ENGINEERED SYSTEMS")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -66,7 +66,16 @@ namespace ORH_ExcelExporterImporter
             };
 
             schedulesImport_Form1.dataGrid.ItemsSource = _schedulesList.Select(schedule => schedule.Name).ToList();
-            schedulesImport_Form1.btn_Import.Content = "Export";
+
+
+            // Update the Content property of lbl_Title
+            schedulesImport_Form1.Dispatcher.Invoke(() =>
+            {
+                schedulesImport_Form1.lbl_Title.Content = "Schedules Export";
+                schedulesImport_Form1.btn_Import.Content = "Export";
+            });
+
+
             schedulesImport_Form1.ShowDialog();
             if (schedulesImport_Form1.DialogResult == true)
             {

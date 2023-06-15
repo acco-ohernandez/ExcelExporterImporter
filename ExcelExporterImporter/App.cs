@@ -33,9 +33,9 @@ namespace ORH_ExcelExporterImporter
             RibbonPanel panel = Utils.CreateRibbonPanel(app, TabName, "Revit Tools");
 
             // 3. Create button data instances
-            ButtonDataClass myButtonData2 = new ButtonDataClass("btnExcelExporterImporter", "In", Import.GetMethod(), Properties.Resources.Schedules_IN_32, Properties.Resources.Schedules_IN_16, "This is a tooltip");
+            ButtonDataClass myButtonData2 = new ButtonDataClass("btnExcelExporterImporter", "In", Import.GetMethod(), Properties.Resources.Schedules_IN_32, Properties.Resources.Schedules_IN_16, "Import Revit Schedules from previously exported excel files.");
 
-            ButtonDataClass myButtonData = new ButtonDataClass("btnExcelExporterExport", "Out", Export.GetMethod(), Properties.Resources.Schedules_Out_32, Properties.Resources.Schedules_Out_16, "This is a tooltip");
+            ButtonDataClass myButtonData = new ButtonDataClass("btnExcelExporterExport", "Out", Export.GetMethod(), Properties.Resources.Schedules_Out_32, Properties.Resources.Schedules_Out_16, "Export Revit Schedules to an excel file.");
 
             // 4. Create buttons
             PushButton myButton2 = panel.AddItem(myButtonData2.Data) as PushButton;
