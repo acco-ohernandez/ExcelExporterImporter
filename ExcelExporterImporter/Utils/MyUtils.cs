@@ -2906,6 +2906,40 @@ PARAM	31fa72f6-6cd4-4ea8-9998-8923afa881e3	Dev_Text_1	TEXT		1	1		1	0";
             }
             else { return true; }
         }
+        public string M_ExportPickedFolder()
+        {
+            using (var folderDialog = new FolderBrowserDialog())
+            {
+                DialogResult result = folderDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderDialog.SelectedPath))
+                {
+                    return folderDialog.SelectedPath;
+                }
+
+                return null; // Return null if no folder was selected or the dialog was canceled
+            }
+        }
+
+        public string M_ExcelSaveAs(string defaultFileName)
+        {
+            using (var saveDialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                //saveDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*"; // Set the file filters
+                saveDialog.Filter = "Excel Files (*.xlsx)|*.xlsx;*.xls"; // Set the file filters
+                saveDialog.DefaultExt = "xlsx"; // Set the default file extension
+                saveDialog.FileName = defaultFileName; // Set the default file name
+
+                DialogResult result = saveDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(saveDialog.FileName))
+                {
+                    return saveDialog.FileName;
+                }
+
+                return null; // Return null if no file was selected or the dialog was canceled
+            }
+        }
     }
 
     public class ScheduleData

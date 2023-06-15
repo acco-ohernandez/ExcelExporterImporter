@@ -43,14 +43,12 @@ namespace ORH_ExcelExporterImporter
 
             //Get form data and do something
             #endregion
-
-            // Create Revit_Exports on desktop if it doesn't exist
-            string _FolderName = "Revit_Exports";
-            var _path = _CreateFolderOnDesktopByName(_FolderName);
             string docName = doc.Title; // Name of the revit document
-            string _excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
-
-
+            string _excelFilePath = null;
+            //// Create Revit_Exports on desktop if it doesn't exist
+            //string _FolderName = "Revit_Exports";
+            //var _path = _CreateFolderOnDesktopByName(_FolderName);
+            //string _excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
 
             // ================= Get All Schedules =================
             var _schedulesList = M_GetSchedulesList(doc); // Get all the Schedules into a list
@@ -89,6 +87,13 @@ namespace ORH_ExcelExporterImporter
                     M_MyTaskDialog("Info", "No schedules were selected");
                     return Result.Cancelled;
                 }
+                // pick a forder for the excel export
+                //string _path = M_ExportPickedFolder();
+                string _path = M_ExcelSaveAs($"{docName}_Schedules.xlsx");
+                if (_path == null) { M_MyTaskDialog("Info", "You did not select an output path"); return Result.Cancelled; }
+                //_excelFilePath = $"{_path}\\{docName}_Schedules.xlsx"; // Path of the excel file to be output
+                _excelFilePath = _path; // Path of the excel file to be output
+
                 // populate the selectedSchedules list to be exported
                 List<ViewSchedule> selectedSchedules = new List<ViewSchedule>();
                 foreach (var scheduleName in selectedSchedulenames)
